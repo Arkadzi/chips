@@ -12,11 +12,9 @@ import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.text.Editable;
 import android.text.Spannable;
-import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
 import android.text.style.ImageSpan;
-import android.text.style.StrikethroughSpan;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -27,11 +25,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.MultiAutoCompleteTextView;
 import android.widget.TextView;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickListener {
-    Pattern commaPattern = Pattern.compile("\\w{0}\\b,\\b\\w{0}");
 
     public ChipsView(Context context) {
         super(context);
@@ -59,27 +53,15 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
     private TextWatcher textWatcher = new TextWatcher() {
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
-//            if(before == 0 && count > 0 && start > 0 && s.charAt(start) == ',') {
-//                setChips(s.toString().replaceAll("\\w{0}\\b,\\b\\w{0}", ", "));
-//            }
-//            if (count >= 1) {
-//                if (s.charAt(start) == ',') {
-//                    setChips(getText());
-//                }
-//            }
+
         }
+
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             Log.e("TextWatcher", String.format("before %s %d", s, start));
 
             if (count > 0 && after == 0 && start > 0) {
                 String source = s.toString();
-//                Matcher m = commaPattern.matcher(source);
-//                while (m.find()) {
-//                    source = source.substring(0, m.start()) + ", " + source.substring(m.end());
-//                    if (start >= m.start()) start++;
-//                }
-//                Log.e("TextWatcher"/, String.format("after %s %d", source, start));
                 if (start < source.length() && source.charAt(start) == ',') {
                     start++;
                 }
@@ -110,7 +92,6 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
 
     public void setChips(CharSequence source) {
         String text = source.toString();
-//        text = text.replaceAll("\\w{0}\\b,\\b\\w{0}", ", ");
         while (text.contains("  ")) {
             text = text.replace("  ", " ");
         }
@@ -128,7 +109,6 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
                 Bitmap bitmap = convertViewToBitmap(chipsView);
                 BitmapDrawable bmpDrawable = new BitmapDrawable(getResources(), bitmap);
                 bmpDrawable.setBounds(0, 0, bmpDrawable.getIntrinsicWidth(), bmpDrawable.getIntrinsicHeight());
-//                ImageSpan span = new ImageSpan(bmpDrawable, ImageSpan.ALIGN_BASELINE);
                 ssb.setSpan(new ImageSpan(bmpDrawable), x, x + c.length() + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                 x = x + c.length() + 2;
             }
@@ -159,4 +139,8 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
     }
 
 
+    @Override
+    protected void onSelectionChanged(int selStart, int selEnd) {
+        setSelection(this.length());
+    }
 }
