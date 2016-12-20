@@ -32,15 +32,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        String[] words=new String[] {
-                "word1 wor1d", "word2 wor2d", "word3 wor3d", "word4 wor4d", "word5 wor5d"
+        String[] words = new String[]{
+                "qwe", "asd", "zxc"
         };
         imageView = (ImageView) findViewById(R.id.image_view);
 
         MultiAutoCompleteTextView macTv = (MultiAutoCompleteTextView) this.findViewById(R.id.mac_tv);
-        ArrayAdapter<String> aaStr = new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,words);
+        ArrayAdapter<String> aaStr = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, words);
         macTv.setAdapter(aaStr);
-        macTv.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
 
         editText = (EditText) findViewById(R.id.editText);
 
