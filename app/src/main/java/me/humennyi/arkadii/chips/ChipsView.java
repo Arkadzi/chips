@@ -10,10 +10,12 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
+import android.text.style.ClickableSpan;
 import android.text.style.ImageSpan;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -47,6 +49,7 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         setOnItemClickListener(this);
         addTextChangedListener(textWatcher);
         setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
+        setMovementMethod(ClickableMovementMethod.getInstance());
 
     }
 
@@ -84,12 +87,6 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         }
     };
 
-    @Override
-    public void setText(CharSequence text, BufferType type) {
-        super.setText(text, type);
-        Log.e("ChipsView", "append '" + text + "'");
-    }
-
     public void setChips(CharSequence source) {
         String text = source.toString();
         while (text.contains("  ")) {
@@ -105,11 +102,13 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
             for (String c : chips) {
 
                 ViewGroup chipsView = (ViewGroup) lf.inflate(R.layout.chips, null);
-                ((TextView) chipsView.getChildAt(0)).setText(c);
+                ((TextView) chipsView.getChildAt(1)).setText(c);
                 Bitmap bitmap = convertViewToBitmap(chipsView);
+
                 BitmapDrawable bmpDrawable = new BitmapDrawable(getResources(), bitmap);
                 bmpDrawable.setBounds(0, 0, bmpDrawable.getIntrinsicWidth(), bmpDrawable.getIntrinsicHeight());
-                ssb.setSpan(new ImageSpan(bmpDrawable), x, x + c.length() + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                ImageSpan what = new ClickableImageSpanImpl(bmpDrawable);
+                ssb.setSpan(what, x, x + c.length() + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                 x = x + c.length() + 2;
             }
             setText(ssb);
@@ -142,5 +141,17 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
     @Override
     protected void onSelectionChanged(int selStart, int selEnd) {
         setSelection(this.length());
+    }
+
+    static class ClickableImageSpanImpl extends ClickableImageSpan {
+
+        public ClickableImageSpanImpl(Drawable d) {
+            super(d);
+        }
+
+        @Override
+        public void onClick(View view) {
+            Log.e("Span", "click " + view);
+        }
     }
 }

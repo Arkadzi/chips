@@ -33,13 +33,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         String[] words = new String[]{
-                "qwe", "asd", "zxc"
+                "qweqwe", "asdasdasd", "zxczxczxczxc", "zxczxczxczxczxczxczxc"
         };
         imageView = (ImageView) findViewById(R.id.image_view);
 
         MultiAutoCompleteTextView macTv = (MultiAutoCompleteTextView) this.findViewById(R.id.mac_tv);
         ArrayAdapter<String> aaStr = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, words);
         macTv.setAdapter(aaStr);
+        Log.e("Span", "click " + macTv);
 
         editText = (EditText) findViewById(R.id.editText);
 
