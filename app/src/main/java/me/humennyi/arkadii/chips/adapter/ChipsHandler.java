@@ -11,6 +11,5 @@ import me.humennyi.arkadii.chips.Chips;
 
 public interface ChipsHandler {
     Drawable getChipsDrawable(Chips chips);
-    View.OnClickListener getChipsClickListener(String text);
-    Chips getChipsByText(String text);
+    View.OnClickListener getChipsClickListener(Chips chips);
 }

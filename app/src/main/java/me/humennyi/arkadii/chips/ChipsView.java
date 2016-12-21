@@ -12,12 +12,9 @@ import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.text.Editable;
-import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
-import android.text.style.ClickableSpan;
-import android.text.style.ImageSpan;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -29,7 +26,14 @@ import android.widget.MultiAutoCompleteTextView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import me.humennyi.arkadii.chips.adapter.ChipsAdapter;
+
 public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickListener {
+    public static final int NO_NEW_CHIPS = -1;
+    private final List<Chips> chips = new ArrayList<>();
 
     public ChipsView(Context context) {
         super(context);
@@ -77,7 +81,7 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
                         String firstPart = source.substring(0, leftBorder + 1) + " ";
                         String lastPart = source.substring(rightBorder + 1);
                         Log.e("TextWatcher", String.format("\'%s\' \'%s\'", firstPart, lastPart));
-                        setChips(firstPart + lastPart);
+                        setChips(firstPart + lastPart, chips.size() - 1);
                     }
                 }
             }
@@ -88,7 +92,7 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         }
     };
 
-    public void setChips(CharSequence source) {
+    public void setChips(CharSequence source, int position) {
         String text = source.toString();
         while (text.contains("  ")) {
             text = text.replace("  ", " ");
@@ -97,21 +101,34 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         if (text.contains(",")) {
 
             final SpannableStringBuilder ssb = new SpannableStringBuilder(text);
-            String chips[] = text.split(", ");
+            String chipsNames[] = text.split(", ");
+
             LayoutInflater lf = (LayoutInflater) getContext().getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
-            int x = 0;
-            for (String c : chips) {
-
-                ViewGroup chipsView = (ViewGroup) lf.inflate(R.layout.chips, null);
-                ((TextView) chipsView.getChildAt(1)).setText(c);
-                Bitmap bitmap = convertViewToBitmap(chipsView);
-
-                BitmapDrawable bmpDrawable = new BitmapDrawable(getResources(), bitmap);
-                bmpDrawable.setBounds(0, 0, bmpDrawable.getIntrinsicWidth(), bmpDrawable.getIntrinsicHeight());
-                String spanText = ssb.subSequence(x, x+c.length()).toString();
-                ClickListenerImpl clickListener = new ClickListenerImpl(getContext(), spanText);
-                ClickableImageSpanWrapper.wrap(ssb, bmpDrawable, clickListener, x, x + c.length() + 1);
-                x = x + c.length() + 2;
+            ChipsAdapter adapter = (ChipsAdapter) getAdapter();
+            if (chips.size() < chipsNames.length) {
+                if (position != NO_NEW_CHIPS) {
+                    chips.add(adapter.getItem(position).copyValid());
+                }
+            } else if (chips.size() > chipsNames.length) {
+                chips.remove(position);
+            }
+            int spanStart = 0;
+            for (int i = 0; i < chipsNames.length; i++) {
+                String chipsName = chipsNames[i];
+                Log.e("ChipsView", "\'" + chipsName + "\'");
+//                ViewGroup chipsView = (ViewGroup) lf.inflate(R.layout.chips, null);
+//                ((TextView) chipsView.getChildAt(1)).setText(chipsName);
+//                Bitmap bitmap = convertViewToBitmap(chipsView);
+//
+//                BitmapDrawable bmpDrawable = new BitmapDrawable(getResources(), bitmap);
+//                bmpDrawable.setBounds(0, 0, bmpDrawable.getIntrinsicWidth(), bmpDrawable.getIntrinsicHeight());
+//                String spanText = ssb.subSequence(spanStart, spanStart+chipsName.length()).toString();
+//                ClickListenerImpl clickListener = new ClickListenerImpl(getContext(), spanText);
+                Chips currentChips = this.chips.get(position);
+                Drawable chipsDrawable = adapter.getChipsDrawable(currentChips);
+                OnClickListener chipsClickListener = adapter.getChipsClickListener(currentChips);
+                ClickableImageSpanWrapper.wrap(ssb, chipsDrawable, chipsClickListener, spanStart, spanStart + chipsName.length() + 1);
+                spanStart = spanStart + chipsName.length() + 2;
             }
             setText(ssb);
             setSelection(getText().length());
@@ -121,22 +138,12 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
     }
 
 
-    private Bitmap convertViewToBitmap(View v) {
-        if (v.getMeasuredHeight() <= 0) {
-            int specWidth = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
-            v.measure(specWidth, specWidth);
-            Bitmap b = Bitmap.createBitmap(v.getMeasuredWidth(), v.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
-            Canvas c = new Canvas(b);
-            v.layout(0, 0, v.getMeasuredWidth(), v.getMeasuredHeight());
-            v.draw(c);
-            return b;
-        }
-        return null;
-    }
+
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        setChips(getText());
+
+        setChips(getText(), position);
     }
 
 

@@ -7,14 +7,19 @@ import android.support.annotation.DrawableRes;
  */
 
 public class Chips {
-    private int id = -1;
     private String text;
     @DrawableRes
     private int drawableId;
+    private boolean isValid;
 
     public Chips(String text, int drawableId) {
+        this(text, drawableId, true);
+    }
+
+    public Chips(String text, int drawableId, boolean isValid) {
         this.text = text;
         this.drawableId = drawableId;
+        this.isValid = isValid;
     }
 
     public String getText() {
@@ -33,11 +38,15 @@ public class Chips {
         this.drawableId = drawableId;
     }
 
-    public int getId() {
-        return id;
+    public boolean isValid() {
+        return isValid;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setValid(boolean valid) {
+        isValid = valid;
+    }
+
+    public Chips copyValid() {
+        return new Chips(text, drawableId, true);
     }
 }
