@@ -52,8 +52,6 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         addTextChangedListener(textWatcher);
         setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
         setMovementMethod(LinkMovementMethod.getInstance());
-//        setMovementMethod(ClickableMovementMethod.getInstance());
-
     }
 
     private TextWatcher textWatcher = new TextWatcher() {
