@@ -15,6 +15,7 @@ import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
+import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.text.style.ImageSpan;
 import android.util.AttributeSet;
@@ -26,6 +27,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.MultiAutoCompleteTextView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickListener {
 
@@ -49,7 +51,8 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         setOnItemClickListener(this);
         addTextChangedListener(textWatcher);
         setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
-        setMovementMethod(ClickableMovementMethod.getInstance());
+        setMovementMethod(LinkMovementMethod.getInstance());
+//        setMovementMethod(ClickableMovementMethod.getInstance());
 
     }
 
@@ -95,7 +98,7 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         Log.e("ChipsView", "'" + text + "'");
         if (text.contains(",")) {
 
-            SpannableStringBuilder ssb = new SpannableStringBuilder(text);
+            final SpannableStringBuilder ssb = new SpannableStringBuilder(text);
             String chips[] = text.split(", ");
             LayoutInflater lf = (LayoutInflater) getContext().getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
             int x = 0;
@@ -107,8 +110,9 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
 
                 BitmapDrawable bmpDrawable = new BitmapDrawable(getResources(), bitmap);
                 bmpDrawable.setBounds(0, 0, bmpDrawable.getIntrinsicWidth(), bmpDrawable.getIntrinsicHeight());
-                ImageSpan what = new ClickableImageSpanImpl(bmpDrawable);
-                ssb.setSpan(what, x, x + c.length() + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                String spanText = ssb.subSequence(x, x+c.length()).toString();
+                ClickListenerImpl clickListener = new ClickListenerImpl(getContext(), spanText);
+                ClickableImageSpanWrapper.wrap(ssb, bmpDrawable, clickListener, x, x + c.length() + 1);
                 x = x + c.length() + 2;
             }
             setText(ssb);
@@ -143,15 +147,18 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         setSelection(this.length());
     }
 
-    static class ClickableImageSpanImpl extends ClickableImageSpan {
+    static class ClickListenerImpl implements OnClickListener {
+        private String spanText;
+        private Context context;
 
-        public ClickableImageSpanImpl(Drawable d) {
-            super(d);
+        public ClickListenerImpl(Context context, String spanText) {
+            this.context = context;
+            this.spanText = spanText;
         }
 
         @Override
-        public void onClick(View view) {
-            Log.e("Span", "click " + view);
+        public void onClick(View v) {
+            Toast.makeText(context, spanText, Toast.LENGTH_SHORT).show();
         }
     }
 }
