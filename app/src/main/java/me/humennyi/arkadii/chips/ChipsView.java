@@ -5,35 +5,30 @@ package me.humennyi.arkadii.chips;
  */
 
 
-import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Bundle;
+import android.os.Parcelable;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.MultiAutoCompleteTextView;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import me.humennyi.arkadii.chips.adapter.ChipsAdapter;
 
 public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickListener {
     public static final int NO_NEW_CHIPS = -1;
-    private final List<Chips> chips = new ArrayList<>();
+    public static final String SUPER_STATE = "superState";
+    public static final String CHIPS = "chips";
+    private final ArrayList<Chips> chips = new ArrayList<>();
 
     public ChipsView(Context context) {
         super(context);
@@ -97,12 +92,11 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         while (text.contains("  ")) {
             text = text.replace("  ", " ");
         }
-        Log.e("ChipsView", "'" + text + "'");
         if (text.contains(",")) {
 
             final SpannableStringBuilder ssb = new SpannableStringBuilder(text);
             String chipsNames[] = text.split(", ");
-
+            Log.e("ChipsView", position + " " + chips);
             ChipsAdapter adapter = (ChipsAdapter) getAdapter();
             if (chips.size() < chipsNames.length) {
                 if (position != NO_NEW_CHIPS) {
@@ -127,33 +121,41 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         }
     }
 
-
-
-
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
         setChips(getText(), position);
     }
-
 
     @Override
     protected void onSelectionChanged(int selStart, int selEnd) {
         setSelection(this.length());
     }
 
-    static class ClickListenerImpl implements OnClickListener {
-        private String spanText;
-        private Context context;
+    @Override
+    public Parcelable onSaveInstanceState() {
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(SUPER_STATE, super.onSaveInstanceState());
+        bundle.putParcelableArrayList(CHIPS, chips);
+        return bundle;
+    }
 
-        public ClickListenerImpl(Context context, String spanText) {
-            this.context = context;
-            this.spanText = spanText;
+    @Override
+    public void onRestoreInstanceState(Parcelable state) {
+        if (state instanceof Bundle) {
+            Bundle bundle = (Bundle) state;
+            restoreChipsList(bundle);
+            state = bundle.getParcelable(SUPER_STATE);
         }
+        super.onRestoreInstanceState(state);
+    }
 
-        @Override
-        public void onClick(View v) {
-            Toast.makeText(context, spanText, Toast.LENGTH_SHORT).show();
+    private void restoreChipsList(Bundle bundle) {
+        ArrayList<Parcelable> chipsList = bundle.getParcelableArrayList(CHIPS);
+        this.chips.clear();
+        if (chipsList != null) {
+            for (Parcelable chips : chipsList) {
+                this.chips.add((Chips) chips);
+            }
         }
     }
 }

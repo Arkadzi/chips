@@ -38,10 +38,9 @@ public class MainActivity extends AppCompatActivity {
         list.add(new Chips("asdasdasd", R.mipmap.ic_launcher));
         list.add(new Chips("zxczxczxczxc", R.mipmap.ic_launcher));
         list.add(new Chips("zxczxczxczxczxc", R.mipmap.ic_launcher));
-        macTv.setAdapter(new ChipsAdapter(this, suggestionsIdHolder, invalidChipsIdHolder, invalidChipsIdHolder, list));
-        Log.e("Span", "click " + macTv);
-
+        macTv.setAdapter(new ChipsAdapter(this, suggestionsIdHolder, chipsIdHolder, invalidChipsIdHolder, list));
         editText = (EditText) findViewById(R.id.editText);
-
     }
+
+
 }
