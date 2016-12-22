@@ -9,6 +9,7 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
@@ -60,32 +61,17 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
             String source = s.toString();
             if (before == 0 && count > 0) {
                 if (source.endsWith(". ") || source.endsWith("  ")) {
-                    setChipsAfterSpaces(start, source);
+                    setChipsAfterSpacesInput(start, source);
                 } else if (source.endsWith(",")) {
-                    setChipsAfterComma(start, source);
+                    setChipsAfterCommaInput(start, source);
                 }
             }
         }
 
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            Log.e("TextWatcher", String.format("before %s %d", s, start));
-
-            if (count > 0 && after == 0 && start > 0) {
-                String source = s.toString();
-                if (start < source.length() && source.charAt(start) == ',') {
-                    start++;
-                }
-                if (source.charAt(start - 1) == ',') {
-                    int rightBorder = source.substring(0, start).lastIndexOf(',');
-                    if (rightBorder > -1) {
-                        String substring = source.subSequence(0, rightBorder).toString();
-                        int leftBorder = substring.lastIndexOf(',');
-                        String firstPart = source.substring(0, leftBorder + 1) + " ";
-                        String lastPart = source.substring(rightBorder + 1);
-                        setChips(firstPart + lastPart, chips.size() - 1, null);
-                    }
-                }
+            if (count > 0 && after == 0) {
+                removeLastChips(s, start);
             }
         }
 
@@ -95,7 +81,26 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         }
     };
 
-    private void setChipsAfterComma(int start, String source) {
+    private void removeLastChips(CharSequence s, int start) {
+        if (start > 0) {
+            String source = s.toString();
+            if (start < source.length() && source.charAt(start) == ',') {
+                start++;
+            }
+            if (source.charAt(start - 1) == ',') {
+                int rightBorder = source.substring(0, start).lastIndexOf(',');
+                if (rightBorder > -1) {
+                    String substring = source.subSequence(0, rightBorder).toString();
+                    int leftBorder = substring.lastIndexOf(',');
+                    String firstPart = source.substring(0, leftBorder + 1) + " ";
+                    String lastPart = source.substring(rightBorder + 1);
+                    setChips(firstPart + lastPart, chips.size() - 1, null);
+                }
+            }
+        }
+    }
+
+    private void setChipsAfterCommaInput(int start, String source) {
         int lastIndexOfComma = source.substring(0, start).lastIndexOf(",");
         String trim = source.substring(lastIndexOfComma + 1, start).trim();
         if (!trim.isEmpty()) {
@@ -107,47 +112,61 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         }
     }
 
-    private void setChipsAfterSpaces(int start, String source) {
-        int lastIndexOfComma = source.lastIndexOf(",");
-        String trim = source.substring(lastIndexOfComma + 1, start).trim();
-        if (!trim.isEmpty()) {
-            String newSource = source.substring(0, lastIndexOfComma + 1) + " " + trim + ", ";
-            setChips(newSource, IGNORED_POSITION, trim);
+    private void setChipsAfterSpacesInput(int start, String source) {
+        if (start > 0) {
+            int lastIndexOfComma = source.lastIndexOf(",");
+            Log.e("ChipsView", source + " " + start);
+            String trim = source.substring(lastIndexOfComma + 1, start).trim();
+            if (!trim.isEmpty()) {
+                String newSource = source.substring(0, lastIndexOfComma + 1) + " " + trim + ", ";
+                setChips(newSource, IGNORED_POSITION, trim);
+            }
         }
     }
 
-    public void setChips(CharSequence source, int editedPosition, @Nullable String newChips) {
+    private void setChips(CharSequence source, int editedPosition, @Nullable String newChips) {
         String text = source.toString();
         while (text.contains("  ")) {
             text = text.replace("  ", " ");
         }
         if (text.contains(",")) {
-
-            final SpannableStringBuilder ssb = new SpannableStringBuilder(text);
             String chipsNames[] = text.split(", ");
             ChipsAdapter adapter = (ChipsAdapter) getAdapter();
-            if (chips.size() < chipsNames.length) {
-                if (editedPosition != IGNORED_POSITION) {
-                    chips.add(adapter.getItem(editedPosition).copyValid());
-                } else if (newChips != null) {
-                    chips.add(new Chips(newChips, 0, false));
-                }
-            } else if (chips.size() > chipsNames.length && editedPosition != IGNORED_POSITION) {
-                chips.remove(editedPosition);
-            }
-            int spanStart = 0;
-            for (int i = 0; i < chipsNames.length; i++) {
-                String chipsName = chipsNames[i];
-                Drawable chipsDrawable = adapter.getChipsDrawable(getChips(i));
-                OnClickListener chipsClickListener = adapter.getChipsClickListener(i);
-                ClickableImageSpanWrapper.wrap(ssb, chipsDrawable, chipsClickListener,
-                        spanStart, spanStart + chipsName.length() + 1);
-                spanStart = spanStart + chipsName.length() + 2;
-            }
+            syncChipsListWithSpannableText(editedPosition, newChips, chipsNames, adapter);
+            final SpannableStringBuilder ssb = prepareSpannableText(text, chipsNames, adapter);
             setText(ssb);
             setSelection(getText().length());
         } else {
             setText("");
+        }
+    }
+
+    @NonNull
+    private SpannableStringBuilder prepareSpannableText(String text, String[] chipsNames,
+                                                        ChipsAdapter adapter) {
+        final SpannableStringBuilder ssb = new SpannableStringBuilder(text);
+        int spanStart = 0;
+        for (int i = 0; i < chipsNames.length; i++) {
+            String chipsName = chipsNames[i];
+            Drawable chipsDrawable = adapter.getChipsDrawable(getChips(i));
+            OnClickListener chipsClickListener = adapter.getChipsClickListener(i);
+            ClickableImageSpanWrapper.wrap(ssb, chipsDrawable, chipsClickListener,
+                    spanStart, spanStart + chipsName.length() + 1);
+            spanStart = spanStart + chipsName.length() + 2;
+        }
+        return ssb;
+    }
+
+    private void syncChipsListWithSpannableText(int editedPosition, @Nullable String newChips,
+                                                String[] chipsNames, ChipsAdapter adapter) {
+        if (chips.size() < chipsNames.length) {
+            if (editedPosition != IGNORED_POSITION) {
+                chips.add(adapter.getItem(editedPosition).copyValid());
+            } else if (newChips != null) {
+                chips.add(new Chips(newChips, 0, false));
+            }
+        } else if (chips.size() > chipsNames.length && editedPosition != IGNORED_POSITION) {
+            chips.remove(editedPosition);
         }
     }
 
