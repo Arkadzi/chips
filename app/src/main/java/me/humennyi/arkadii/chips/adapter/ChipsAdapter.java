@@ -30,6 +30,8 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
     private ChipsIdHolder suggestionIdHolder;
     private ChipsIdHolder chipsIdHolder;
     private ChipsIdHolder invalidChipsIdHolder;
+    @Nullable
+    private OnChipsClickListener chipsClickListener;
 
     public ChipsAdapter(Context context, ChipsIdHolder suggestionIdHolder, ChipsIdHolder chipsIdHolder, ChipsIdHolder invalidChipsIdHolder, List<Chips> suggestions) {
         layoutInflater = LayoutInflater.from(context);
@@ -80,21 +82,18 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
     @Override
     public Drawable getChipsDrawable(Chips chips) {
         ChipsIdHolder idHolder = chips.isValid() ? chipsIdHolder : invalidChipsIdHolder;
-        View chipsView = ChipsUtils.inflate(layoutInflater, chips, idHolder);
-        Bitmap bitmap = ChipsUtils.convertViewToBitmap(chipsView);
-
-        BitmapDrawable bmpDrawable = new BitmapDrawable(context.getResources(), bitmap);
-        bmpDrawable.setBounds(0, 0, bmpDrawable.getIntrinsicWidth(), bmpDrawable.getIntrinsicHeight());
-        return bmpDrawable;
+        return ChipsUtils.generateDrawable(context.getResources(), layoutInflater, chips, idHolder);
     }
 
 
     @Override
-    public View.OnClickListener getChipsClickListener(final Chips chips) {
+    public View.OnClickListener getChipsClickListener(final int chipsPosition) {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.e("ChipsClick", String.valueOf(chips));
+                if (chipsClickListener != null) {
+                    chipsClickListener.onChipsClick(chipsPosition);
+                }
             }
         };
     }
@@ -140,4 +139,12 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
             }
         }
     };
+
+    public void setChipsClickListener(@Nullable OnChipsClickListener chipsClickListener) {
+        this.chipsClickListener = chipsClickListener;
+    }
+
+    public interface OnChipsClickListener {
+        void onChipsClick(int position);
+    }
 }

@@ -4,6 +4,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,8 +18,8 @@ import me.humennyi.arkadii.chips.R;
  * Created by arkadii on 12/21/16.
  */
 
-public class ChipsUtils {
-    public static Bitmap convertViewToBitmap(View v) {
+class ChipsUtils {
+    private static Bitmap convertViewToBitmap(View v) {
         if (v.getMeasuredHeight() <= 0) {
             int specWidth = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
             v.measure(specWidth, specWidth);
@@ -31,7 +32,7 @@ public class ChipsUtils {
         return null;
     }
 
-    public static View inflate(LayoutInflater inflater, Chips chips, ChipsIdHolder idHolder) {
+    private static View inflate(LayoutInflater inflater, Chips chips, ChipsIdHolder idHolder) {
         View chipsView = inflater.inflate(idHolder.getLayoutId(), null);
         TextView textView = (TextView) chipsView.findViewById(idHolder.getTextViewId());
         if (textView != null) {
@@ -42,5 +43,14 @@ public class ChipsUtils {
             imageView.setImageResource(chips.getDrawableId());
         }
         return chipsView;
+    }
+
+    static Drawable generateDrawable(Resources resources, LayoutInflater inflater, Chips chips, ChipsIdHolder idHolder) {
+        View chipsView = ChipsUtils.inflate(inflater, chips, idHolder);
+        Bitmap bitmap = ChipsUtils.convertViewToBitmap(chipsView);
+
+        BitmapDrawable bmpDrawable = new BitmapDrawable(resources, bitmap);
+        bmpDrawable.setBounds(0, 0, bmpDrawable.getIntrinsicWidth(), bmpDrawable.getIntrinsicHeight());
+        return bmpDrawable;
     }
 }

@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import me.humennyi.arkadii.chips.adapter.ChipsAdapter;
 
 public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickListener {
-    public static final int NO_NEW_CHIPS = -1;
+    public static final int IGNORED_POSITION = -1;
     public static final String SUPER_STATE = "superState";
     public static final String CHIPS = "chips";
     private final ArrayList<Chips> chips = new ArrayList<>();
@@ -58,27 +58,11 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
             String source = s.toString();
-            Log.e("ChipsView", "source = \'" + source + "\' before = " + before + " " + count);
             if (before == 0 && count > 0) {
                 if (source.endsWith(". ") || source.endsWith("  ")) {
-                    int lastIndexOfComma = source.lastIndexOf(",");
-                    String trim = source.substring(lastIndexOfComma + 1, start).trim();
-                    if (!trim.isEmpty()) {
-                        Log.e("ChipsView", "trim = \'" + trim + "\'");
-                        String newSource = source.substring(0, lastIndexOfComma + 1) + " " + trim + ", ";
-                        setChips(newSource, NO_NEW_CHIPS, trim);
-                    }
+                    setChipsAfterSpaces(start, source);
                 } else if (source.endsWith(",")) {
-                    int lastIndexOfComma = source.substring(0, start).lastIndexOf(",");
-                    String trim = source.substring(lastIndexOfComma + 1, start).trim();
-                    if (!trim.isEmpty()) {
-                        Log.e("ChipsView", "trim = \'" + trim + "\'");
-                        String newSource = source.substring(0, lastIndexOfComma + 1) + " " + trim + ", ";
-                        setChips(newSource, NO_NEW_CHIPS, trim);
-                    } else {
-                        String newSource = source.substring(0, lastIndexOfComma + 1) + " ";
-                        setChips(newSource, NO_NEW_CHIPS, null);
-                    }
+                    setChipsAfterComma(start, source);
                 }
             }
         }
@@ -99,7 +83,6 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
                         int leftBorder = substring.lastIndexOf(',');
                         String firstPart = source.substring(0, leftBorder + 1) + " ";
                         String lastPart = source.substring(rightBorder + 1);
-                        Log.e("TextWatcher", String.format("\'%s\' \'%s\'", firstPart, lastPart));
                         setChips(firstPart + lastPart, chips.size() - 1, null);
                     }
                 }
@@ -112,34 +95,53 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         }
     };
 
-    public void setChips(CharSequence source, int position, @Nullable String newChips) {
+    private void setChipsAfterComma(int start, String source) {
+        int lastIndexOfComma = source.substring(0, start).lastIndexOf(",");
+        String trim = source.substring(lastIndexOfComma + 1, start).trim();
+        if (!trim.isEmpty()) {
+            String newSource = source.substring(0, lastIndexOfComma + 1) + " " + trim + ", ";
+            setChips(newSource, IGNORED_POSITION, trim);
+        } else {
+            String newSource = source.substring(0, lastIndexOfComma + 1) + " ";
+            setChips(newSource, IGNORED_POSITION, null);
+        }
+    }
+
+    private void setChipsAfterSpaces(int start, String source) {
+        int lastIndexOfComma = source.lastIndexOf(",");
+        String trim = source.substring(lastIndexOfComma + 1, start).trim();
+        if (!trim.isEmpty()) {
+            String newSource = source.substring(0, lastIndexOfComma + 1) + " " + trim + ", ";
+            setChips(newSource, IGNORED_POSITION, trim);
+        }
+    }
+
+    public void setChips(CharSequence source, int editedPosition, @Nullable String newChips) {
         String text = source.toString();
         while (text.contains("  ")) {
             text = text.replace("  ", " ");
         }
-        Log.e("setChips", text);
         if (text.contains(",")) {
 
             final SpannableStringBuilder ssb = new SpannableStringBuilder(text);
             String chipsNames[] = text.split(", ");
-            Log.e("ChipsView", position + " " + chips);
             ChipsAdapter adapter = (ChipsAdapter) getAdapter();
             if (chips.size() < chipsNames.length) {
-                if (position != NO_NEW_CHIPS) {
-                    chips.add(adapter.getItem(position).copyValid());
-                } else if (newChips != null){
+                if (editedPosition != IGNORED_POSITION) {
+                    chips.add(adapter.getItem(editedPosition).copyValid());
+                } else if (newChips != null) {
                     chips.add(new Chips(newChips, 0, false));
                 }
-            } else if (chips.size() > chipsNames.length) {
-                chips.remove(position);
+            } else if (chips.size() > chipsNames.length && editedPosition != IGNORED_POSITION) {
+                chips.remove(editedPosition);
             }
             int spanStart = 0;
             for (int i = 0; i < chipsNames.length; i++) {
                 String chipsName = chipsNames[i];
-                Chips currentChips = this.chips.get(i);
-                Drawable chipsDrawable = adapter.getChipsDrawable(currentChips);
-                OnClickListener chipsClickListener = adapter.getChipsClickListener(currentChips);
-                ClickableImageSpanWrapper.wrap(ssb, chipsDrawable, chipsClickListener, spanStart, spanStart + chipsName.length() + 1);
+                Drawable chipsDrawable = adapter.getChipsDrawable(getChips(i));
+                OnClickListener chipsClickListener = adapter.getChipsClickListener(i);
+                ClickableImageSpanWrapper.wrap(ssb, chipsDrawable, chipsClickListener,
+                        spanStart, spanStart + chipsName.length() + 1);
                 spanStart = spanStart + chipsName.length() + 2;
             }
             setText(ssb);
@@ -185,5 +187,9 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
                 this.chips.add((Chips) chips);
             }
         }
+    }
+
+    public Chips getChips(int position) {
+        return chips.get(position);
     }
 }
