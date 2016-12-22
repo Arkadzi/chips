@@ -1,27 +1,19 @@
 package me.humennyi.arkadii.chips;
 
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.TextWatcher;
-import android.text.style.AbsoluteSizeSpan;
-import android.text.style.ImageSpan;
-import android.text.style.StyleSpan;
 import android.util.Log;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.MultiAutoCompleteTextView;
-import android.widget.TextView;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import me.humennyi.arkadii.chips.adapter.ChipsAdapter;
+import me.humennyi.arkadii.chips.adapter.ChipsIdHolder;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -36,10 +28,17 @@ public class MainActivity extends AppCompatActivity {
                 "qweqwe", "asdasdasd", "zxczxczxczxc", "zxczxczxczxczxczxczxc"
         };
         imageView = (ImageView) findViewById(R.id.image_view);
-
         MultiAutoCompleteTextView macTv = (MultiAutoCompleteTextView) this.findViewById(R.id.mac_tv);
-        ArrayAdapter<String> aaStr = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, words);
-        macTv.setAdapter(aaStr);
+//        ArrayAdapter<String> aaStr = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, words);
+        ChipsIdHolder suggestionsIdHolder = new ChipsIdHolder(android.R.layout.simple_list_item_1, android.R.id.text1, 0);
+        ChipsIdHolder chipsIdHolder = new ChipsIdHolder(R.layout.chips, R.id.tvText, R.id.ivIcon);
+        ChipsIdHolder invalidChipsIdHolder = new ChipsIdHolder(R.layout.chips_invalid, R.id.tvText, 0);
+        List<Chips> list = new ArrayList<>();
+        list.add(new Chips("qweqwe", R.mipmap.ic_launcher));
+        list.add(new Chips("asdasdasd", R.mipmap.ic_launcher));
+        list.add(new Chips("zxczxczxczxc", R.mipmap.ic_launcher));
+        list.add(new Chips("zxczxczxczxczxc", R.mipmap.ic_launcher));
+        macTv.setAdapter(new ChipsAdapter(this, suggestionsIdHolder, invalidChipsIdHolder, invalidChipsIdHolder, list));
         Log.e("Span", "click " + macTv);
 
         editText = (EditText) findViewById(R.id.editText);

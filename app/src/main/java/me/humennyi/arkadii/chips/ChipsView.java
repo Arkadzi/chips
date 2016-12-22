@@ -103,7 +103,6 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
             final SpannableStringBuilder ssb = new SpannableStringBuilder(text);
             String chipsNames[] = text.split(", ");
 
-            LayoutInflater lf = (LayoutInflater) getContext().getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
             ChipsAdapter adapter = (ChipsAdapter) getAdapter();
             if (chips.size() < chipsNames.length) {
                 if (position != NO_NEW_CHIPS) {
@@ -115,16 +114,7 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
             int spanStart = 0;
             for (int i = 0; i < chipsNames.length; i++) {
                 String chipsName = chipsNames[i];
-                Log.e("ChipsView", "\'" + chipsName + "\'");
-//                ViewGroup chipsView = (ViewGroup) lf.inflate(R.layout.chips, null);
-//                ((TextView) chipsView.getChildAt(1)).setText(chipsName);
-//                Bitmap bitmap = convertViewToBitmap(chipsView);
-//
-//                BitmapDrawable bmpDrawable = new BitmapDrawable(getResources(), bitmap);
-//                bmpDrawable.setBounds(0, 0, bmpDrawable.getIntrinsicWidth(), bmpDrawable.getIntrinsicHeight());
-//                String spanText = ssb.subSequence(spanStart, spanStart+chipsName.length()).toString();
-//                ClickListenerImpl clickListener = new ClickListenerImpl(getContext(), spanText);
-                Chips currentChips = this.chips.get(position);
+                Chips currentChips = this.chips.get(i);
                 Drawable chipsDrawable = adapter.getChipsDrawable(currentChips);
                 OnClickListener chipsClickListener = adapter.getChipsClickListener(currentChips);
                 ClickableImageSpanWrapper.wrap(ssb, chipsDrawable, chipsClickListener, spanStart, spanStart + chipsName.length() + 1);

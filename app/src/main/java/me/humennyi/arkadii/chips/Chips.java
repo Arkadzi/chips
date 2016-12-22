@@ -49,4 +49,11 @@ public class Chips {
     public Chips copyValid() {
         return new Chips(text, drawableId, true);
     }
+
+    @Override
+    public String toString() {
+        return "Chips{" +
+                "text='" + text + '\'' +
+                '}';
+    }
 }

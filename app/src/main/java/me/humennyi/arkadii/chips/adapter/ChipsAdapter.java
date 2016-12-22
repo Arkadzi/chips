@@ -2,31 +2,29 @@ package me.humennyi.arkadii.chips.adapter;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.widget.Filter;
+import android.widget.Filterable;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import me.humennyi.arkadii.chips.Chips;
-import me.humennyi.arkadii.chips.R;
 
 /**
  * Created by arkadii on 12/21/16.
  */
 
-public class ChipsAdapter extends BaseAdapter implements ChipsHandler {
+public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterable {
     private final List<Chips> suggestionData = new ArrayList<>();
+    private final List<Chips> currentSuggestions = new ArrayList<>();
     private final LayoutInflater layoutInflater;
     private final Context context;
     private ChipsIdHolder suggestionIdHolder;
@@ -47,17 +45,16 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler {
         if (chips != null) {
             this.suggestionData.addAll(chips);
         }
-        notifyDataSetChanged();
     }
 
     @Override
     public int getCount() {
-        return suggestionData.size();
+        return currentSuggestions.size();
     }
 
     @Override
     public Chips getItem(int position) {
-        return suggestionData.get(position);
+        return currentSuggestions.get(position);
     }
 
     @Override
@@ -75,8 +72,7 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler {
             view = viewHolder.getView();
         }
 
-        Chips item = getItem(position);
-        viewHolder.bind(item);
+        viewHolder.bind(getItem(position));
 
         return view;
     }
@@ -93,7 +89,6 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler {
     }
 
 
-
     @Override
     public View.OnClickListener getChipsClickListener(final Chips chips) {
         return new View.OnClickListener() {
@@ -104,5 +99,45 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler {
         };
     }
 
+    @Override
+    public Filter getFilter() {
+        return nameFilter;
+    }
 
+    Filter nameFilter = new Filter() {
+
+        @Override
+        public CharSequence convertResultToString(Object resultValue) {
+            return ((Chips) resultValue).getText();
+        }
+
+        @Override
+        protected FilterResults performFiltering(CharSequence constraint) {
+            FilterResults filterResults = new FilterResults();
+            if (constraint != null) {
+                currentSuggestions.clear();
+                try {
+                    for (Chips chips : suggestionData) {
+                        if (chips.getText().toLowerCase().startsWith(constraint.toString().toLowerCase())) {
+                            currentSuggestions.add(chips);
+                        }
+                    }
+                } catch (Exception e) {
+                }
+                filterResults.values = currentSuggestions;
+                filterResults.count = currentSuggestions.size();
+            }
+            return filterResults;
+        }
+
+        @Override
+        protected void publishResults(CharSequence constraint,
+                                      FilterResults results) {
+            if (results != null && results.count > 0) {
+                notifyDataSetChanged();
+            } else {
+                notifyDataSetInvalidated();
+            }
+        }
+    };
 }
