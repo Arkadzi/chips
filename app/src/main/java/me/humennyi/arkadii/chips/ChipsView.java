@@ -9,6 +9,7 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.annotation.Nullable;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
@@ -56,7 +57,30 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
     private TextWatcher textWatcher = new TextWatcher() {
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
-
+            String source = s.toString();
+            Log.e("ChipsView", "source = \'" + source + "\' before = " + before + " " + count);
+            if (before == 0 && count > 0) {
+                if (source.endsWith(". ") || source.endsWith("  ")) {
+                    int lastIndexOfComma = source.lastIndexOf(",");
+                    String trim = source.substring(lastIndexOfComma + 1, start).trim();
+                    if (!trim.isEmpty()) {
+                        Log.e("ChipsView", "trim = \'" + trim + "\'");
+                        String newSource = source.substring(0, lastIndexOfComma + 1) + " " + trim + ", ";
+                        setChips(newSource, NO_NEW_CHIPS, trim);
+                    }
+                } else if (source.endsWith(",")) {
+                    int lastIndexOfComma = source.substring(0, start).lastIndexOf(",");
+                    String trim = source.substring(lastIndexOfComma + 1, start).trim();
+                    if (!trim.isEmpty()) {
+                        Log.e("ChipsView", "trim = \'" + trim + "\'");
+                        String newSource = source.substring(0, lastIndexOfComma + 1) + " " + trim + ", ";
+                        setChips(newSource, NO_NEW_CHIPS, trim);
+                    } else {
+                        String newSource = source.substring(0, lastIndexOfComma + 1) + " ";
+                        setChips(newSource, NO_NEW_CHIPS, null);
+                    }
+                }
+            }
         }
 
         @Override
@@ -76,7 +100,7 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
                         String firstPart = source.substring(0, leftBorder + 1) + " ";
                         String lastPart = source.substring(rightBorder + 1);
                         Log.e("TextWatcher", String.format("\'%s\' \'%s\'", firstPart, lastPart));
-                        setChips(firstPart + lastPart, chips.size() - 1);
+                        setChips(firstPart + lastPart, chips.size() - 1, null);
                     }
                 }
             }
@@ -84,14 +108,16 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
 
         @Override
         public void afterTextChanged(Editable s) {
+
         }
     };
 
-    public void setChips(CharSequence source, int position) {
+    public void setChips(CharSequence source, int position, @Nullable String newChips) {
         String text = source.toString();
         while (text.contains("  ")) {
             text = text.replace("  ", " ");
         }
+        Log.e("setChips", text);
         if (text.contains(",")) {
 
             final SpannableStringBuilder ssb = new SpannableStringBuilder(text);
@@ -101,6 +127,8 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
             if (chips.size() < chipsNames.length) {
                 if (position != NO_NEW_CHIPS) {
                     chips.add(adapter.getItem(position).copyValid());
+                } else if (newChips != null){
+                    chips.add(new Chips(newChips, 0, false));
                 }
             } else if (chips.size() > chipsNames.length) {
                 chips.remove(position);
@@ -123,7 +151,7 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        setChips(getText(), position);
+        setChips(getText(), position, null);
     }
 
     @Override

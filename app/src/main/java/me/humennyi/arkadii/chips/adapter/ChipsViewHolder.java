@@ -53,7 +53,7 @@ public class ChipsViewHolder {
     private void bindImage(Chips item) {
         if (imageView != null) {
             int drawableId = item.getDrawableId();
-            if (drawableId != 0) {
+            if (drawableId > 0) {
                 imageView.setVisibility(View.VISIBLE);
                 imageView.setImageResource(drawableId);
             } else {
