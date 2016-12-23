@@ -6,6 +6,7 @@ package me.humennyi.arkadii.chips;
 
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -23,6 +24,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.MultiAutoCompleteTextView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import me.humennyi.arkadii.chips.adapter.ChipsAdapter;
 
@@ -30,25 +32,45 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
     public static final int IGNORED_POSITION = -1;
     public static final String SUPER_STATE = "superState";
     public static final String CHIPS = "chips";
+    private final List<String> separators = new ArrayList<>();
     private final ArrayList<Chips> chips = new ArrayList<>();
 
     public ChipsView(Context context) {
         super(context);
-        init(context);
+        init(context, null);
     }
 
     public ChipsView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init(context);
+        init(context, attrs);
     }
 
     public ChipsView(Context context, AttributeSet attrs,
                      int defStyle) {
         super(context, attrs, defStyle);
-        init(context);
+        init(context, attrs);
     }
 
-    public void init(Context context) {
+    public void init(Context context, AttributeSet attrs) {
+        TypedArray array = null;
+        try {
+            array = context.obtainStyledAttributes(attrs, R.styleable.ChipsView);
+            final int id = array.getResourceId(R.styleable.ChipsView_separators, 0);
+
+            if (id != 0) {
+                final String[] values = getResources().getStringArray(id);
+                for (String value : values) {
+                    Log.e("separator", "\'" + value + "\'");
+                    if (!value.contains(",")) {
+                        separators.add(value);
+                    }
+                }
+            }
+        } finally {
+            if (array != null) {
+                array.recycle();
+            }
+        }
         setOnItemClickListener(this);
         addTextChangedListener(textWatcher);
         setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
@@ -60,10 +82,13 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         public void onTextChanged(CharSequence s, int start, int before, int count) {
             String source = s.toString();
             if (before == 0 && count > 0) {
-                if (source.endsWith(". ") || source.endsWith("  ")) {
-                    setChipsAfterSpacesInput(start, source);
-                } else if (source.endsWith(",")) {
+                if (source.endsWith(",")) {
                     setChipsAfterCommaInput(start, source);
+                } else {
+                    String separator = endsWithSeparator(source);
+                    if (separator != null) {
+                        setChipsAfterSeparatorInput(source.substring(0, source.length() - separator.length()));
+                    }
                 }
             }
         }
@@ -80,6 +105,15 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
 
         }
     };
+
+    private String endsWithSeparator(String source) {
+        for (String availableSeparator : separators) {
+            if (source.endsWith(availableSeparator)) {
+                return availableSeparator;
+            }
+        }
+        return null;
+    }
 
     private void removeLastChips(CharSequence s, int start) {
         if (start > 0) {
@@ -102,7 +136,8 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
 
     private void setChipsAfterCommaInput(int start, String source) {
         int lastIndexOfComma = source.substring(0, start).lastIndexOf(",");
-        String trim = source.substring(lastIndexOfComma + 1, start).trim();
+        String trim = source.substring(lastIndexOfComma + 1, start).trim().replace("\n", " ");
+
         if (!trim.isEmpty()) {
             String newSource = source.substring(0, lastIndexOfComma + 1) + " " + trim + ", ";
             setChips(newSource, IGNORED_POSITION, trim);
@@ -112,23 +147,17 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         }
     }
 
-    private void setChipsAfterSpacesInput(int start, String source) {
-        if (start > 0) {
-            int lastIndexOfComma = source.lastIndexOf(",");
-            Log.e("ChipsView", source + " " + start);
-            String trim = source.substring(lastIndexOfComma + 1, start).trim();
-            if (!trim.isEmpty()) {
-                String newSource = source.substring(0, lastIndexOfComma + 1) + " " + trim + ", ";
-                setChips(newSource, IGNORED_POSITION, trim);
-            }
+    private void setChipsAfterSeparatorInput(String source) {
+        int lastIndexOfComma = source.lastIndexOf(',');
+        String newChipsText = source.substring(lastIndexOfComma + 1).trim().replace("\n", " ");
+        if (!newChipsText.isEmpty()) {
+            setChips(source + ", ", IGNORED_POSITION, newChipsText);
         }
     }
 
     private void setChips(CharSequence source, int editedPosition, @Nullable String newChips) {
-        String text = source.toString();
-        while (text.contains("  ")) {
-            text = text.replace("  ", " ");
-        }
+        String text = source.toString().replace("\n", " ");
+        text = trimInside(text);
         if (text.contains(",")) {
             String chipsNames[] = text.split(", ");
             ChipsAdapter adapter = (ChipsAdapter) getAdapter();
@@ -139,6 +168,14 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         } else {
             setText("");
         }
+    }
+
+    @NonNull
+    private String trimInside(String text) {
+        while (text.contains("  ")) {
+            text = text.replace("  ", " ");
+        }
+        return text;
     }
 
     @NonNull
