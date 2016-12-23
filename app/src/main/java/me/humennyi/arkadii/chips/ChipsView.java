@@ -19,6 +19,7 @@ import android.text.method.LinkMovementMethod;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.MultiAutoCompleteTextView;
@@ -75,6 +76,7 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         addTextChangedListener(textWatcher);
         setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
         setMovementMethod(LinkMovementMethod.getInstance());
+        setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
     }
 
     private TextWatcher textWatcher = new TextWatcher() {
