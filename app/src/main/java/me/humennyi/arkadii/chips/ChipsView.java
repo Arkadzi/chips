@@ -81,7 +81,7 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
             String source = s.toString();
-            if (before == 0 && count > 0) {
+            if (count - before > 0) {
                 if (source.endsWith(",")) {
                     setChipsAfterCommaInput(start, source);
                 } else {
