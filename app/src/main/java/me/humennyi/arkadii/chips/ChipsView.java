@@ -140,15 +140,23 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
 
             }
         } else {
+            shouldRedraw = false;
             setText("");
         }
         setSelection(this.length());
     }
 
     private String prepareSource(String source) {
-        source = source
-                .replaceAll(separatorRegex, SPAN_SEPARATOR);
+
+        while (source.contains("\n")) {
+            source = source.replace("\n", " ");
+        }
+        while (source.contains("  ")) {
+            source = source.replace("  ", " ");
+        }
+        source = source.replaceAll(separatorRegex, SPAN_SEPARATOR);
         String doubleSpanSeparator = SPAN_SEPARATOR + SPAN_SEPARATOR;
+
         while (source.contains(doubleSpanSeparator)) {
             source = source.replace(doubleSpanSeparator, SPAN_SEPARATOR);
         }
