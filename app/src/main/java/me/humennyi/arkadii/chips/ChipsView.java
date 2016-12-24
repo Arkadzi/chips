@@ -10,10 +10,9 @@ import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.text.Editable;
 import android.text.SpannableStringBuilder;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
 import android.util.AttributeSet;
@@ -22,6 +21,8 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Filterable;
+import android.widget.ListAdapter;
 import android.widget.MultiAutoCompleteTextView;
 
 import java.util.ArrayList;
@@ -30,11 +31,31 @@ import java.util.List;
 import me.humennyi.arkadii.chips.adapter.ChipsAdapter;
 
 public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickListener {
-    public static final int IGNORED_POSITION = -1;
     public static final String SUPER_STATE = "superState";
     public static final String CHIPS = "chips";
-    private final List<String> separators = new ArrayList<>();
+    public static final String SPAN_SEPARATOR = ", ";
+    private String separatorRegex;
     private final ArrayList<Chips> chips = new ArrayList<>();
+    private boolean shouldRedraw;
+    private TextWatcher textWatcher = new SimpleTextWatcher() {
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+            String source = s.toString();
+            if (count - before > 0) {
+                setChips(source);
+            }
+        }
+
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            String source = s.toString();
+            if (count == 1 && after == 0 && source.endsWith(SPAN_SEPARATOR)) {
+                source = removeChips(source, chips.size() - 1);
+                shouldRedraw = true;
+                setChips(source);
+            }
+        }
+    };
 
     public ChipsView(Context context) {
         super(context);
@@ -56,17 +77,7 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         TypedArray array = null;
         try {
             array = context.obtainStyledAttributes(attrs, R.styleable.ChipsView);
-            final int id = array.getResourceId(R.styleable.ChipsView_separators, 0);
-
-            if (id != 0) {
-                final String[] values = getResources().getStringArray(id);
-                for (String value : values) {
-                    Log.e("separator", "\'" + value + "\'");
-                    if (!value.contains(",")) {
-                        separators.add(value);
-                    }
-                }
-            }
+            prepareRegex(array);
         } finally {
             if (array != null) {
                 array.recycle();
@@ -79,114 +90,79 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
     }
 
-    private TextWatcher textWatcher = new TextWatcher() {
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-            String source = s.toString();
-            if (count - before > 0) {
-                if (source.endsWith(",")) {
-                    setChipsAfterCommaInput(start, source);
-                } else {
-                    String separator = endsWithSeparator(source);
-                    if (separator != null) {
-                        setChipsAfterSeparatorInput(source.substring(0, source.length() - separator.length()));
-                    }
+    private void prepareRegex(TypedArray array) {
+        final int id = array.getResourceId(R.styleable.ChipsView_separators, 0);
+
+        if (id != 0) {
+            final String[] values = getResources().getStringArray(id);
+            List<String> separators = new ArrayList<>();
+            for (String value : values) {
+                if (!value.contains(",")) {
+                    separators.add(value);
                 }
             }
-        }
-
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            if (count > 0 && after == 0) {
-                removeLastChips(s, start);
-            }
-        }
-
-        @Override
-        public void afterTextChanged(Editable s) {
-
-        }
-    };
-
-    private String endsWithSeparator(String source) {
-        for (String availableSeparator : separators) {
-            if (source.endsWith(availableSeparator)) {
-                return availableSeparator;
-            }
-        }
-        return null;
-    }
-
-    private void removeLastChips(CharSequence s, int start) {
-        if (start > 0) {
-            String source = s.toString();
-            if (start < source.length() && source.charAt(start) == ',') {
-                start++;
-            }
-            if (source.charAt(start - 1) == ',') {
-                int rightBorder = source.substring(0, start).lastIndexOf(',');
-                if (rightBorder > -1) {
-                    String substring = source.subSequence(0, rightBorder).toString();
-                    int leftBorder = substring.lastIndexOf(',');
-                    String firstPart = source.substring(0, leftBorder + 1) + " ";
-                    String lastPart = source.substring(rightBorder + 1);
-                    setChips(firstPart + lastPart, chips.size() - 1, null);
-                }
-            }
+            separators.add(",");
+            separatorRegex = "(" + TextUtils.join("|", separators) + ")+[ |\n]*";
+            Log.e("Regex", separatorRegex);
         }
     }
 
-    private void setChipsAfterCommaInput(int start, String source) {
-        int lastIndexOfComma = source.substring(0, start).lastIndexOf(",");
-        String trim = source.substring(lastIndexOfComma + 1, start).trim().replace("\n", " ");
 
-        if (!trim.isEmpty()) {
-            String newSource = source.substring(0, lastIndexOfComma + 1) + " " + trim + ", ";
-            setChips(newSource, IGNORED_POSITION, trim);
-        } else {
-            String newSource = source.substring(0, lastIndexOfComma + 1) + " ";
-            setChips(newSource, IGNORED_POSITION, null);
+    private String removeChips(String source, int position) {
+        chips.remove(position);
+        String[] split = source.split(SPAN_SEPARATOR);
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < split.length; i++) {
+            if (i != position) {
+                builder.append(split[i] + SPAN_SEPARATOR);
+            }
         }
+        return builder.toString();
     }
 
-    private void setChipsAfterSeparatorInput(String source) {
-        int lastIndexOfComma = source.lastIndexOf(',');
-        String newChipsText = source.substring(lastIndexOfComma + 1).trim().replace("\n", " ");
-        if (!newChipsText.isEmpty()) {
-            setChips(source + ", ", IGNORED_POSITION, newChipsText);
-        }
-    }
+    private void setChips(String source) {
+        if (!source.isEmpty()) {
+            source = prepareSource(source);
+            String[] chipsText = source.split(SPAN_SEPARATOR);
+            int chipsCount = chipsText.length;
+            if (!source.endsWith(SPAN_SEPARATOR)) {
+                chipsCount--;
+            }
+            for (int i = chips.size(); i < chipsCount; i++) {
+                chips.add(new Chips(chipsText[i], 0, isValidChipsText(chipsText[i])));
+                shouldRedraw = true;
+            }
 
-    private void setChips(CharSequence source, int editedPosition, @Nullable String newChips) {
-        String text = source.toString().replace("\n", " ");
-        text = trimInside(text);
-        if (text.contains(",")) {
-            String chipsNames[] = text.split(", ");
-            ChipsAdapter adapter = (ChipsAdapter) getAdapter();
-            syncChipsListWithSpannableText(editedPosition, newChips, chipsNames, adapter);
-            final SpannableStringBuilder ssb = prepareSpannableText(text, chipsNames, adapter);
-            setText(ssb);
-            setSelection(getText().length());
+            if (shouldRedraw) {
+                SpannableStringBuilder text = this.prepareNewSpannableText(source, chipsText, chipsCount);
+                setText(text);
+                shouldRedraw = false;
+
+            }
         } else {
             setText("");
         }
+        setSelection(this.length());
     }
 
-    @NonNull
-    private String trimInside(String text) {
-        while (text.contains("  ")) {
-            text = text.replace("  ", " ");
+    private String prepareSource(String source) {
+        source = source
+                .replaceAll(separatorRegex, SPAN_SEPARATOR);
+        String doubleSpanSeparator = SPAN_SEPARATOR + SPAN_SEPARATOR;
+        while (source.contains(doubleSpanSeparator)) {
+            source = source.replace(doubleSpanSeparator, SPAN_SEPARATOR);
         }
-        return text;
+        return source;
     }
 
-    @NonNull
-    private SpannableStringBuilder prepareSpannableText(String text, String[] chipsNames,
-                                                        ChipsAdapter adapter) {
-        final SpannableStringBuilder ssb = new SpannableStringBuilder(text);
+    @Nullable
+    private SpannableStringBuilder prepareNewSpannableText(String text, String[] chipsText, int chipsCount) {
+        ChipsAdapter adapter = getAdapter();
+
         int spanStart = 0;
-        for (int i = 0; i < chipsNames.length; i++) {
-            String chipsName = chipsNames[i];
+        final SpannableStringBuilder ssb = new SpannableStringBuilder(text);
+        for (int i = 0; i < chipsCount; i++) {
+            String chipsName = chipsText[i];
             Drawable chipsDrawable = adapter.getChipsDrawable(getChips(i));
             OnClickListener chipsClickListener = adapter.getChipsClickListener(i);
             ClickableImageSpanWrapper.wrap(ssb, chipsDrawable, chipsClickListener,
@@ -196,22 +172,25 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         return ssb;
     }
 
-    private void syncChipsListWithSpannableText(int editedPosition, @Nullable String newChips,
-                                                String[] chipsNames, ChipsAdapter adapter) {
-        if (chips.size() < chipsNames.length) {
-            if (editedPosition != IGNORED_POSITION) {
-                chips.add(adapter.getItem(editedPosition).copyValid());
-            } else if (newChips != null) {
-                chips.add(new Chips(newChips, 0, false));
-            }
-        } else if (chips.size() > chipsNames.length && editedPosition != IGNORED_POSITION) {
-            chips.remove(editedPosition);
-        }
+    private boolean isValidChipsText(String chipsName) {
+        return true;
+    }
+
+    @Override
+    public <T extends ListAdapter & Filterable> void setAdapter(T adapter) {
+        if (adapter != null && !(adapter instanceof ChipsAdapter))
+            throw new IllegalArgumentException("adapter should be instance of ChipsAdapter");
+        super.setAdapter(adapter);
+    }
+
+    @Override
+    public ChipsAdapter getAdapter() {
+        return (ChipsAdapter) super.getAdapter();
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        setChips(getText(), position, null);
+//        setChips(getText().toString());
     }
 
     @Override
