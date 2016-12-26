@@ -50,7 +50,8 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             String source = s.toString();
-            if (count == 1 && after == 0 && source.endsWith(SPAN_SEPARATOR)) {
+            if (count == 1 && after == 0 && source.endsWith(SPAN_SEPARATOR)
+                    && !source.replaceAll(separatorRegex, ",").endsWith(",,")) {
                 source = removeChips(source, chips.size() - 1);
                 shouldRedraw = true;
                 setChips(source);
@@ -171,6 +172,7 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         while (source.contains(doubleSpanSeparator)) {
             source = source.replace(doubleSpanSeparator, SPAN_SEPARATOR);
         }
+        if (source.startsWith(" ")) source = source.substring(1);
         if (source.startsWith(SPAN_SEPARATOR)) source = source.substring(SPAN_SEPARATOR.length());
         return source;
     }
