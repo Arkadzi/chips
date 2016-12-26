@@ -20,22 +20,8 @@
         app:pattern="\\w{1,6}"
         android:completionThreshold="1"/>
 
-
-    <me.humennyi.arkadii.chips.ChipsView
-        android:id="@+id/chipsView2"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        app:separators="@array/separator_list"
-        app:pattern="\\w{1,6}"
-        android:completionThreshold="1"/>
-
-
-    <me.humennyi.arkadii.chips.ChipsView
-        android:id="@+id/chipsView3"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        app:separators="@array/separator_list"
-        app:pattern="\\w{1,6}"
-        android:completionThreshold="1"/>
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

@@ -126,8 +126,8 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
     }
 
     private void setChips(String source) {
+        source = prepareSource(source);
         if (!source.isEmpty()) {
-            source = prepareSource(source);
             String[] chipsText = source.split(SPAN_SEPARATOR);
             int chipsCount = chipsText.length;
             if (!source.endsWith(SPAN_SEPARATOR)) {
@@ -171,6 +171,7 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         while (source.contains(doubleSpanSeparator)) {
             source = source.replace(doubleSpanSeparator, SPAN_SEPARATOR);
         }
+        if (source.startsWith(SPAN_SEPARATOR)) source = source.substring(SPAN_SEPARATOR.length());
         return source;
     }
 
