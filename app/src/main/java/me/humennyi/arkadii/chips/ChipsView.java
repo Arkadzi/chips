@@ -35,6 +35,7 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
     public static final String CHIPS = "chips";
     public static final String SPAN_SEPARATOR = ", ";
     private String separatorRegex;
+    private String patternRegex = ".+";
     private final ArrayList<Chips> chips = new ArrayList<>();
     private boolean shouldRedraw;
     private TextWatcher textWatcher = new SimpleTextWatcher() {
@@ -77,7 +78,7 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         TypedArray array = null;
         try {
             array = context.obtainStyledAttributes(attrs, R.styleable.ChipsView);
-            prepareRegex(array);
+            fetchAttributes(array);
         } finally {
             if (array != null) {
                 array.recycle();
@@ -90,7 +91,7 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
     }
 
-    private void prepareRegex(TypedArray array) {
+    private void fetchAttributes(TypedArray array) {
         final int id = array.getResourceId(R.styleable.ChipsView_separators, 0);
 
         if (id != 0) {
@@ -103,7 +104,11 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
             }
             separators.add(",");
             separatorRegex = "(" + TextUtils.join("|", separators) + ")+[ |\n]*";
-            Log.e("Regex", separatorRegex);
+        }
+
+        String pattern = array.getString(R.styleable.ChipsView_pattern);
+        if (pattern != null) {
+            patternRegex = pattern;
         }
     }
 
@@ -137,7 +142,6 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
                 SpannableStringBuilder text = this.prepareNewSpannableText(source, chipsText, chipsCount);
                 setText(text);
                 shouldRedraw = false;
-
             }
         } else {
             shouldRedraw = false;
@@ -181,7 +185,7 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
     }
 
     private boolean isValidChipsText(String chipsName) {
-        return true;
+        return chipsName.matches(patternRegex);
     }
 
     @Override
@@ -198,7 +202,6 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//        setChips(getText().toString());
     }
 
     @Override

@@ -17,7 +17,7 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         custom:separators="@array/separator_list"
-        android:completionThreshold="1"
-        />
+        custom:pattern="\\w{1,6}"
+        android:completionThreshold="1"/>
 
 </FrameLayout>
