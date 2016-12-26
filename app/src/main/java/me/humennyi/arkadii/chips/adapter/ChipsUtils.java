@@ -1,5 +1,6 @@
 package me.humennyi.arkadii.chips.adapter;
 
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -39,17 +40,20 @@ class ChipsUtils {
             textView.setText(chips.getText());
         }
         ImageView imageView = (ImageView) chipsView.findViewById(idHolder.getImageViewId());
-        if (imageView != null && chips.getDrawableId() > 0) {
-            imageView.setImageResource(chips.getDrawableId());
+        if (imageView != null) {
+            if(chips.getDrawableId() > 0) {
+                imageView.setImageResource(chips.getDrawableId());
+            } else {
+                imageView.setVisibility(View.GONE);
+            }
         }
         return chipsView;
     }
 
-    static Drawable generateDrawable(Resources resources, LayoutInflater inflater, Chips chips, ChipsIdHolder idHolder) {
+    static Drawable generateDrawable(Context context, LayoutInflater inflater, Chips chips, ChipsIdHolder idHolder) {
         View chipsView = ChipsUtils.inflate(inflater, chips, idHolder);
         Bitmap bitmap = ChipsUtils.convertViewToBitmap(chipsView);
-
-        BitmapDrawable bmpDrawable = new BitmapDrawable(resources, bitmap);
+        BitmapDrawable bmpDrawable = new BitmapDrawable(context.getResources(), bitmap);
         bmpDrawable.setBounds(0, 0, bmpDrawable.getIntrinsicWidth(), bmpDrawable.getIntrinsicHeight());
         return bmpDrawable;
     }

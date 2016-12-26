@@ -82,7 +82,7 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
     @Override
     public Drawable getChipsDrawable(Chips chips) {
         ChipsIdHolder idHolder = chips.isValid() ? chipsIdHolder : invalidChipsIdHolder;
-        return ChipsUtils.generateDrawable(context.getResources(), layoutInflater, chips, idHolder);
+        return ChipsUtils.generateDrawable(context, layoutInflater, chips, idHolder);
     }
 
 
@@ -96,6 +96,17 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
                 }
             }
         };
+    }
+
+    @Nullable
+    @Override
+    public Chips getChipsByText(String text) {
+        for (Chips chips : suggestionData) {
+            if (chips.getText().equalsIgnoreCase(text)) {
+                return chips;
+            }
+        }
+        return null;
     }
 
     @Override

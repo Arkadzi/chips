@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">ChipsDemo</string>
+    <string-array name="separator_list">
+        <item>\u0020\u0020</item>
+        <item>\\.\u0020</item>
+        <item>x</item>
+    </string-array>
+</resources>

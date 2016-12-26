@@ -1,10 +1,4 @@
 <resources>
     <string name="app_name">Chips</string>
-    <string-array name="separator_list">
-        <!--<item>\\s\\s</item>-->
-        <item>\u0020\u0020</item>
-        <!--<item>\\.\\s</item>-->
-        <item>\\.\u0020</item>
-        <item>x</item>
-    </string-array>
+
 </resources>
