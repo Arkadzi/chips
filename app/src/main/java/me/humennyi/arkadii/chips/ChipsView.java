@@ -50,8 +50,9 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             String source = s.toString();
+            String rep = source.replaceAll(separatorRegex, ",");
             if (count == 1 && after == 0 && source.endsWith(SPAN_SEPARATOR)
-                    && !source.replaceAll(separatorRegex, ",").endsWith(",,")) {
+                    && !(rep.endsWith(",,") || rep.equals(","))) {
                 source = removeChips(source, chips.size() - 1);
                 shouldRedraw = true;
                 setChips(source);
@@ -127,8 +128,10 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
     }
 
     private void setChips(String source) {
-        source = prepareSource(source);
         if (!source.isEmpty()) {
+            source = prepareSource(source);
+            if (source.isEmpty()) return;
+
             String[] chipsText = source.split(SPAN_SEPARATOR);
             int chipsCount = chipsText.length;
             if (!source.endsWith(SPAN_SEPARATOR)) {
