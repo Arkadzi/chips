@@ -138,6 +138,8 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
                 Chips chips = adapter.getChipsByText(chipsText[i]);
                 if (chips == null) {
                     chips = new Chips(chipsText[i], 0, isValidChipsText(chipsText[i]));
+                } else {
+                    chips = new Chips(chips.getText(), chips.getDrawableId(), isValidChipsText(chips.getText()));
                 }
                 this.chips.add(chips);
                 shouldRedraw = true;
