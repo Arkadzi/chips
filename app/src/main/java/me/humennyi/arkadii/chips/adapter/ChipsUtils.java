@@ -57,4 +57,10 @@ class ChipsUtils {
         bmpDrawable.setBounds(0, 0, bmpDrawable.getIntrinsicWidth(), bmpDrawable.getIntrinsicHeight());
         return bmpDrawable;
     }
+
+    public static int measureContentWidth(View view) {
+        int widthMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+        view.measure(widthMeasureSpec, widthMeasureSpec);
+        return view.getMeasuredWidth();
+    }
 }

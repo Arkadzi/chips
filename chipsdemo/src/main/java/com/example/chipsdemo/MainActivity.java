@@ -2,6 +2,12 @@ package com.example.chipsdemo;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -15,8 +21,7 @@ import me.humennyi.arkadii.chips.adapter.ChipsIdHolder;
 public class MainActivity extends AppCompatActivity {
 
     private ChipsView chipsView1;
-//    private ChipsView chipsView2;
-//    private ChipsView chipsView3;
+    private ChipsAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,62 +44,30 @@ public class MainActivity extends AppCompatActivity {
         list.add(new Chips("zxczxczxczxc", R.drawable.down_arrow));
         list.add(new Chips("zxczxczxczxczxc", R.drawable.down_arrow));
 
-        ChipsAdapter adapter = new ChipsAdapter(this, suggestionsIdHolder, chipsIdHolder, invalidChipsIdHolder, list);
-        adapter.setChipsClickListener(new ChipsAdapter.OnChipsClickListener() {
+        ChipsAdapter.PopupCreator popupCreator = new ChipsAdapter.PopupCreator() {
             @Override
-            public void onChipsClick(int position) {
-                String chipsText = chipsView1.getChips(position).getText();
-                String text = position + " " + chipsText;
-                Toast.makeText(MainActivity.this, text, Toast.LENGTH_SHORT).show();
+            public View getPopupView(LayoutInflater inflater, ViewGroup parent, final Chips chips) {
+                final View view = inflater.inflate(R.layout.popup_view, parent, false);
+                View.OnClickListener onClickListener = new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View v) {
+                        CharSequence text = ((Button) v).getText();
+                        Toast.makeText(MainActivity.this, chips.getText() + " " + text, Toast.LENGTH_SHORT).show();
+                    }
+                };
+                view.findViewById(R.id.button1).setOnClickListener(onClickListener);
+                view.findViewById(R.id.button2).setOnClickListener(onClickListener);
+                view.findViewById(R.id.button3).setOnClickListener(onClickListener);
+                ((TextView) view.findViewById(R.id.popup_text)).setText(chips.getText());
+                if (chips.getDrawableId() > 0) {
+                    ((ImageView) view.findViewById(R.id.popup_image)).setImageResource(chips.getDrawableId());
+                }
+                return view;
             }
-        });
+        };
+        adapter = new ChipsAdapter(this, popupCreator, suggestionsIdHolder,
+                chipsIdHolder, invalidChipsIdHolder, list);
         chipsView1.setAdapter(adapter);
     }
-//
-//    private void prepareChipsView2() {
-//        chipsView2 = (ChipsView) this.findViewById(R.id.chipsView2);
-//        ChipsIdHolder suggestionsIdHolder = new ChipsIdHolder(android.R.layout.simple_list_item_1, android.R.id.text1, 0);
-//        ChipsIdHolder chipsIdHolder = new ChipsIdHolder(R.layout.chips2, R.id.tvText, R.id.ivIcon);
-//        ChipsIdHolder invalidChipsIdHolder = new ChipsIdHolder(R.layout.chips_invalid2, R.id.tvText, 0);
-//        List<Chips> list = new ArrayList<>();
-//        list.add(new Chips("qweqwe", R.drawable.me_gusta));
-//        list.add(new Chips("asdasdasd", R.drawable.me_gusta));
-//        list.add(new Chips("zxczxczxczxc", R.drawable.me_gusta));
-//        list.add(new Chips("zxczxczxczxczxc", R.drawable.me_gusta));
-//
-//        ChipsAdapter adapter = new ChipsAdapter(this, suggestionsIdHolder, chipsIdHolder, invalidChipsIdHolder, list);
-//        adapter.setChipsClickListener(new ChipsAdapter.OnChipsClickListener() {
-//            @Override
-//            public void onChipsClick(int position) {
-//                String chipsText = chipsView2.getChips(position).getText();
-//                String text = position + " " + chipsText;
-//                Toast.makeText(MainActivity.this, text, Toast.LENGTH_SHORT).show();
-//            }
-//        });
-//        chipsView2.setAdapter(adapter);
-//    }
-//
-//    private void prepareChipsView3() {
-//        chipsView3 = (ChipsView) this.findViewById(R.id.chipsView3);
-//        ChipsIdHolder suggestionsIdHolder = new ChipsIdHolder(android.R.layout.simple_list_item_1, android.R.id.text1, 0);
-//        ChipsIdHolder chipsIdHolder = new ChipsIdHolder(R.layout.chips3, R.id.tvText, 0);
-//        ChipsIdHolder invalidChipsIdHolder = new ChipsIdHolder(R.layout.chips_invalid3, R.id.tvText, 0);
-//        List<Chips> list = new ArrayList<>();
-//        list.add(new Chips("qweqwe", R.drawable.me_gusta));
-//        list.add(new Chips("asdasdasd", R.drawable.me_gusta));
-//        list.add(new Chips("zxczxczxczxc", R.drawable.me_gusta));
-//        list.add(new Chips("zxczxczxczxczxc", R.drawable.me_gusta));
-//
-//        ChipsAdapter adapter = new ChipsAdapter(this, suggestionsIdHolder, chipsIdHolder, invalidChipsIdHolder, list);
-//        adapter.setChipsClickListener(new ChipsAdapter.OnChipsClickListener() {
-//            @Override
-//            public void onChipsClick(int position) {
-//                String chipsText = chipsView3.getChips(position).getText();
-//                String text = position + " " + chipsText;
-//                Toast.makeText(MainActivity.this, text, Toast.LENGTH_SHORT).show();
-//            }
-//        });
-//        chipsView3.setAdapter(adapter);
-//    }
-
 }

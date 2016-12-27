@@ -1,11 +1,9 @@
 package me.humennyi.arkadii.chips.adapter;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
-import android.util.Log;
+import android.support.v7.widget.ListPopupWindow;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import me.humennyi.arkadii.chips.Chips;
+import me.humennyi.arkadii.chips.ChipsView;
 
 /**
  * Created by arkadii on 12/21/16.
@@ -31,14 +30,27 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
     private ChipsIdHolder chipsIdHolder;
     private ChipsIdHolder invalidChipsIdHolder;
     @Nullable
+    private PopupAdapter popupAdapter;
+    @Nullable
+    private ListPopupWindow listPopupWindow;
+    @Nullable
     private OnChipsClickListener chipsClickListener;
 
-    public ChipsAdapter(Context context, ChipsIdHolder suggestionIdHolder, ChipsIdHolder chipsIdHolder, ChipsIdHolder invalidChipsIdHolder, List<Chips> suggestions) {
-        layoutInflater = LayoutInflater.from(context);
+    public ChipsAdapter(Context context, @Nullable PopupCreator popupCreator,
+                        ChipsIdHolder suggestionIdHolder, ChipsIdHolder chipsIdHolder,
+                        ChipsIdHolder invalidChipsIdHolder,
+                        @Nullable List<Chips> suggestions) {
+        this.layoutInflater = LayoutInflater.from(context);
         this.context = context;
         this.suggestionIdHolder = suggestionIdHolder;
         this.chipsIdHolder = chipsIdHolder;
         this.invalidChipsIdHolder = invalidChipsIdHolder;
+        if (popupCreator != null) {
+            listPopupWindow = new ListPopupWindow(context);
+            this.popupAdapter = new PopupAdapter(popupCreator, layoutInflater, listPopupWindow);
+            listPopupWindow.setAdapter(popupAdapter);
+            listPopupWindow.setModal(false);
+        }
         setSuggestionData(suggestions);
     }
 
@@ -49,6 +61,13 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
         }
     }
 
+    public boolean hidePopup() {
+        if (listPopupWindow != null && listPopupWindow.isShowing()) {
+            listPopupWindow.dismiss();
+            return true;
+        }
+        return false;
+    }
     @Override
     public int getCount() {
         return currentSuggestions.size();
@@ -87,12 +106,14 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
 
 
     @Override
-    public View.OnClickListener getChipsClickListener(final int chipsPosition) {
+    public View.OnClickListener getChipsClickListener(final ChipsView chipsView,
+                                                      final int chipsPosition, final Chips chips) {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                showPopup(chipsView, chips);
                 if (chipsClickListener != null) {
-                    chipsClickListener.onChipsClick(chipsPosition);
+                    chipsClickListener.onChipsClick(chipsPosition, chips);
                 }
             }
         };
@@ -114,7 +135,7 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
         return nameFilter;
     }
 
-    Filter nameFilter = new Filter() {
+    private Filter nameFilter = new Filter() {
 
         @Override
         public CharSequence convertResultToString(Object resultValue) {
@@ -128,11 +149,12 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
                 currentSuggestions.clear();
                 try {
                     for (Chips chips : suggestionData) {
-                        if (chips.getText().toLowerCase().startsWith(constraint.toString().toLowerCase())) {
+                        if (chips.getText().toLowerCase().startsWith(
+                                constraint.toString().toLowerCase())) {
                             currentSuggestions.add(chips);
                         }
                     }
-                } catch (Exception e) {
+                } catch (Exception ignored) {
                 }
                 filterResults.values = currentSuggestions;
                 filterResults.count = currentSuggestions.size();
@@ -151,11 +173,73 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
         }
     };
 
+    private void showPopup(ChipsView chipsView, Chips chips) {
+        if (popupAdapter != null && listPopupWindow != null) {
+            listPopupWindow.setAnchorView(chipsView);
+            popupAdapter.setChips(chips);
+            listPopupWindow.show();
+        }
+
+
+        // Inflate the custom layout/view
+//                View customView = popupCreator.getPopupView(layoutInflater, null, chips);
+//                PopupWindow mPopupWindow = new PopupWindow(
+//                        customView
+//                );
+//                mPopupWindow.setOutsideTouchable(true);
+//                mPopupWindow.setFocusable(true);
+//                mPopupWindow.showAsDropDown(chipsView);
+    }
+
     public void setChipsClickListener(@Nullable OnChipsClickListener chipsClickListener) {
         this.chipsClickListener = chipsClickListener;
     }
 
     public interface OnChipsClickListener {
-        void onChipsClick(int position);
+        void onChipsClick(int position, Chips chips);
+    }
+
+    public interface PopupCreator {
+        View getPopupView(LayoutInflater inflater, ViewGroup parent, Chips chips);
+    }
+
+    private static class PopupAdapter extends BaseAdapter {
+        private final List<Chips> singleChips = new ArrayList<>();
+        private final PopupCreator popupCreator;
+        private final LayoutInflater inflater;
+        private ListPopupWindow listPopupWindow;
+
+        PopupAdapter(PopupCreator popupCreator, LayoutInflater inflater, ListPopupWindow listPopupWindow) {
+            this.popupCreator = popupCreator;
+            this.inflater = inflater;
+            this.listPopupWindow = listPopupWindow;
+        }
+
+        @Override
+        public int getCount() {
+            return singleChips.size();
+        }
+
+        @Override
+        public Chips getItem(int position) {
+            return singleChips.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View popupView = popupCreator.getPopupView(inflater, parent, this.getItem(position));
+            listPopupWindow.setWidth(ChipsUtils.measureContentWidth(popupView));
+            return popupView;
+        }
+
+        protected final void setChips(Chips chips) {
+            this.singleChips.clear();
+            this.singleChips.add(chips);
+        }
     }
 }

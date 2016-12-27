@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 import android.view.View;
 
 import me.humennyi.arkadii.chips.Chips;
+import me.humennyi.arkadii.chips.ChipsView;
 
 /**
  * Created by arkadii on 12/21/16.
@@ -12,7 +13,7 @@ import me.humennyi.arkadii.chips.Chips;
 
 public interface ChipsHandler {
     Drawable getChipsDrawable(Chips chips);
-    View.OnClickListener getChipsClickListener(int chipsPosition);
+    View.OnClickListener getChipsClickListener(ChipsView chipsView, int chipsPosition, Chips chips);
 
     @Nullable
     Chips getChipsByText(String text);

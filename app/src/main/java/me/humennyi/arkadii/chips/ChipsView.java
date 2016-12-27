@@ -17,8 +17,8 @@ import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Filterable;
@@ -41,6 +41,7 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
     private TextWatcher textWatcher = new SimpleTextWatcher() {
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
+            getAdapter().hidePopup();
             String source = s.toString();
             if (count - before > 0) {
                 setChips(source);
@@ -90,7 +91,7 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         addTextChangedListener(textWatcher);
         setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
         setMovementMethod(LinkMovementMethod.getInstance());
-        setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
+//        setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
     }
 
     private void fetchAttributes(TypedArray array) {
@@ -114,6 +115,15 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         }
     }
 
+    @Override
+    public boolean onKeyPreIme(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK &&
+                event.getAction() == KeyEvent.ACTION_UP) {
+            boolean isPopupHidden = getAdapter().hidePopup();
+            if (isPopupHidden) return true;
+        }
+        return super.dispatchKeyEvent(event);
+    }
 
     private String removeChips(String source, int position) {
         chips.remove(position);
@@ -141,24 +151,26 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
             for (int i = chips.size(); i < chipsCount; i++) {
                 Chips chips = adapter.getChipsByText(chipsText[i]);
                 if (chips == null) {
-                    chips = new Chips(chipsText[i], 0, isValidChipsText(chipsText[i]));
+                    chips = new Chips(chipsText[i], 0, this.isValidChipsText(chipsText[i]));
                 } else {
-                    chips = new Chips(chips.getText(), chips.getDrawableId(), isValidChipsText(chips.getText()));
+                    chips = new Chips(chips.getText(), chips.getDrawableId(),
+                            this.isValidChipsText(chips.getText()));
                 }
                 this.chips.add(chips);
                 shouldRedraw = true;
             }
 
             if (shouldRedraw) {
-                SpannableStringBuilder text = this.prepareNewSpannableText(source, chipsText, chipsCount);
+                SpannableStringBuilder text = prepareNewSpannableText(source, chipsText, chipsCount);
                 setText(text);
                 shouldRedraw = false;
+                setSelection(this.length());
+
             }
         } else {
             shouldRedraw = false;
             setText("");
         }
-        setSelection(this.length());
     }
 
     private String prepareSource(String source) {
@@ -181,7 +193,8 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
     }
 
     @Nullable
-    private SpannableStringBuilder prepareNewSpannableText(String text, String[] chipsText, int chipsCount) {
+    private SpannableStringBuilder prepareNewSpannableText(String text, String[] chipsText,
+                                                           int chipsCount) {
         ChipsAdapter adapter = getAdapter();
 
         int spanStart = 0;
@@ -189,7 +202,7 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         for (int i = 0; i < chipsCount; i++) {
             String chipsName = chipsText[i];
             Drawable chipsDrawable = adapter.getChipsDrawable(getChips(i));
-            OnClickListener chipsClickListener = adapter.getChipsClickListener(i);
+            OnClickListener chipsClickListener = adapter.getChipsClickListener(this, i, getChips(i));
             ClickableImageSpanWrapper.wrap(ssb, chipsDrawable, chipsClickListener,
                     spanStart, spanStart + chipsName.length() + 1);
             spanStart = spanStart + chipsName.length() + 2;
@@ -204,7 +217,7 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
     @Override
     public <T extends ListAdapter & Filterable> void setAdapter(T adapter) {
         if (adapter != null && !(adapter instanceof ChipsAdapter))
-            throw new IllegalArgumentException("adapter should be instance of ChipsAdapter");
+            throw new IllegalArgumentException("Adapter should be instance of ChipsAdapter");
         super.setAdapter(adapter);
     }
 
@@ -219,7 +232,10 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
 
     @Override
     protected void onSelectionChanged(int selStart, int selEnd) {
-        setSelection(this.length());
+        int length = length();
+        if (length != selStart || length != selEnd) {
+            setSelection(this.length());
+        }
     }
 
     @Override
