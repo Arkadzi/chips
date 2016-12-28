@@ -65,7 +65,7 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
     }
 
     public boolean hidePopup() {
-        if (listPopupWindow != null) {
+        if (listPopupWindow != null && listPopupWindow.isShowing()) {
             listPopupWindow.dismiss();
             return true;
         }
