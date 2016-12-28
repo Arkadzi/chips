@@ -17,9 +17,7 @@ import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
-import android.text.style.ClickableSpan;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.AdapterView;
@@ -29,7 +27,6 @@ import android.widget.ListAdapter;
 import android.widget.MultiAutoCompleteTextView;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import me.humennyi.arkadii.chips.adapter.ChipsAdapter;
@@ -136,7 +133,7 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < split.length; i++) {
             if (i != position) {
-                builder.append(split[i] + SPAN_SEPARATOR);
+                builder.append(split[i]).append(SPAN_SEPARATOR);
             }
         }
         return builder.toString();
@@ -156,10 +153,10 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
             for (int i = chips.size(); i < chipsCount; i++) {
                 Chips chips = adapter.getChipsByText(chipsText[i]);
                 if (chips == null) {
-                    chips = new Chips(chipsText[i], 0, this.isValidChipsText(chipsText[i]));
+                    chips = new Chips(chipsText[i], 0, isValidChipsText(chipsText[i]));
                 } else {
                     chips = new Chips(chips.getText(), chips.getDrawableId(),
-                            this.isValidChipsText(chips.getText()));
+                            isValidChipsText(chips.getText()));
                 }
                 this.chips.add(chips);
                 shouldRedraw = true;
@@ -207,7 +204,7 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
         for (int i = 0; i < chipsCount; i++) {
             String chipsName = chipsText[i];
             Drawable chipsDrawable = adapter.getChipsDrawable(getChips(i));
-            OnClickListener chipsClickListener = adapter.getChipsClickListener(i, getChips(i));
+            OnSpanClickListener chipsClickListener = adapter.getChipsClickListener(i, getChips(i));
             ClickableImageSpanWrapper.wrap(ssb, chipsDrawable, chipsClickListener,
                     spanStart, spanStart + chipsName.length() + 1);
             spanStart = spanStart + chipsName.length() + 2;
@@ -246,20 +243,24 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
 
     @Override
     public Parcelable onSaveInstanceState() {
-        Editable text = getText();
-        ChipsAdapter adapter = getAdapter();
-        if (text instanceof SpannableStringBuilder && adapter != null) {
-            ClickableImageSpanWrapper.ClickableSpanImpl[] spans =
-                    text.getSpans(0, text.length(), ClickableImageSpanWrapper.ClickableSpanImpl.class);
-            for (ClickableImageSpanWrapper.ClickableSpanImpl span : spans) {
-                span.setOnClickListener(null);
-            }
-        }
+        removeClickableSpanListeners();
         Bundle bundle = new Bundle();
         bundle.putParcelable(SUPER_STATE, super.onSaveInstanceState());
         bundle.putParcelableArrayList(CHIPS, chips);
 
         return bundle;
+    }
+
+    private void removeClickableSpanListeners() {
+        Editable text = getText();
+        ChipsAdapter adapter = getAdapter();
+        if (text instanceof SpannableStringBuilder && adapter != null) {
+            ClickableSpanImpl[] spans =
+                    text.getSpans(0, text.length(), ClickableSpanImpl.class);
+            for (ClickableSpanImpl span : spans) {
+                span.setOnClickListener(null);
+            }
+        }
     }
 
     @Override
@@ -270,12 +271,16 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
             state = bundle.getParcelable(SUPER_STATE);
         }
         super.onRestoreInstanceState(state);
+        setClickableSpanListeners();
+    }
+
+    private void setClickableSpanListeners() {
         Editable text = getText();
         ChipsAdapter adapter = getAdapter();
         if (text instanceof SpannableStringBuilder && adapter != null) {
-            ClickableImageSpanWrapper.ClickableSpanImpl[] spans = text.getSpans(0, text.length(), ClickableImageSpanWrapper.ClickableSpanImpl.class);
+            ClickableSpanImpl[] spans = text.getSpans(0, text.length(), ClickableSpanImpl.class);
             int position = 0;
-            for (ClickableImageSpanWrapper.ClickableSpanImpl span : spans) {
+            for (ClickableSpanImpl span : spans) {
                 Chips chips = getChips(position);
                 span.setOnClickListener(adapter.getChipsClickListener(position, chips));
                 position++;

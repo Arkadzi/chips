@@ -4,7 +4,7 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.ListPopupWindow;
-import android.util.Log;
+import android.text.style.ClickableSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +16,7 @@ import java.util.List;
 
 import me.humennyi.arkadii.chips.Chips;
 import me.humennyi.arkadii.chips.ChipsView;
+import me.humennyi.arkadii.chips.OnSpanClickListener;
 
 /**
  * Created by arkadii on 12/21/16.
@@ -109,11 +110,11 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
 
 
     @Override
-    public View.OnClickListener getChipsClickListener(final int chipsPosition, final Chips chips) {
-        return new View.OnClickListener() {
+    public OnSpanClickListener getChipsClickListener(final int chipsPosition, final Chips chips) {
+        return new OnSpanClickListener() {
             @Override
-            public void onClick(View v) {
-                showPopup(chips);
+            public void onClick(ChipsView widget, ClickableSpan span) {
+                showPopup(chips, span);
                 if (chipsClickListener != null) {
                     chipsClickListener.onChipsClick(chipsPosition, chips);
                 }
@@ -175,7 +176,7 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
         }
     };
 
-    private void showPopup(Chips chips) {
+    private void showPopup(Chips chips, ClickableSpan span) {
         if (popupAdapter != null && listPopupWindow != null) {
             popupAdapter.setChips(chips);
             listPopupWindow.show();

@@ -6,6 +6,7 @@ import android.view.View;
 
 import me.humennyi.arkadii.chips.Chips;
 import me.humennyi.arkadii.chips.ChipsView;
+import me.humennyi.arkadii.chips.OnSpanClickListener;
 
 /**
  * Created by arkadii on 12/21/16.
@@ -13,7 +14,7 @@ import me.humennyi.arkadii.chips.ChipsView;
 
 public interface ChipsHandler {
     Drawable getChipsDrawable(Chips chips);
-    View.OnClickListener getChipsClickListener(int chipsPosition, Chips chips);
+    OnSpanClickListener getChipsClickListener(int chipsPosition, Chips chips);
     @Nullable
     Chips getChipsByText(String text);
 }
