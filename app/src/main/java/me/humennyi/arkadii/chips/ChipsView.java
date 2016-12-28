@@ -11,10 +11,12 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
+import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -26,6 +28,7 @@ import android.widget.ListAdapter;
 import android.widget.MultiAutoCompleteTextView;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import me.humennyi.arkadii.chips.adapter.ChipsAdapter;
@@ -125,6 +128,13 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         return super.dispatchKeyEvent(event);
     }
 
+    @Override
+    protected void onDetachedFromWindow() {
+        Log.e("ChipsView", "onDetachedFromWindow " + getAdapter().hidePopup());
+
+        super.onDetachedFromWindow();
+    }
+
     private String removeChips(String source, int position) {
         chips.remove(position);
         String[] split = source.split(SPAN_SEPARATOR);
@@ -202,7 +212,7 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         for (int i = 0; i < chipsCount; i++) {
             String chipsName = chipsText[i];
             Drawable chipsDrawable = adapter.getChipsDrawable(getChips(i));
-            OnClickListener chipsClickListener = adapter.getChipsClickListener(this, i, getChips(i));
+            OnClickListener chipsClickListener = adapter.getChipsClickListener(i, getChips(i));
             ClickableImageSpanWrapper.wrap(ssb, chipsDrawable, chipsClickListener,
                     spanStart, spanStart + chipsName.length() + 1);
             spanStart = spanStart + chipsName.length() + 2;
@@ -238,11 +248,22 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         }
     }
 
+
     @Override
     public Parcelable onSaveInstanceState() {
+        Log.e("ChipsView", "onSaveInstanceState");
         Bundle bundle = new Bundle();
         bundle.putParcelable(SUPER_STATE, super.onSaveInstanceState());
         bundle.putParcelableArrayList(CHIPS, chips);
+        Editable text = getText();
+        ChipsAdapter adapter = getAdapter();
+        getAdapter().hidePopup();
+        if (text instanceof SpannableStringBuilder && adapter != null) {
+            ClickableImageSpanWrapper.ClickableSpanImpl[] spans = text.getSpans(0, text.length(), ClickableImageSpanWrapper.ClickableSpanImpl.class);
+            for (ClickableImageSpanWrapper.ClickableSpanImpl span : spans) {
+                text.removeSpan(span);
+            }
+        }
         return bundle;
     }
 
@@ -254,6 +275,18 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
             state = bundle.getParcelable(SUPER_STATE);
         }
         super.onRestoreInstanceState(state);
+        Editable text = getText();
+        ChipsAdapter adapter = getAdapter();
+        if (text instanceof SpannableStringBuilder && adapter != null) {
+
+            ClickableImageSpanWrapper.ClickableSpanImpl[] spans = text.getSpans(0, text.length(), ClickableImageSpanWrapper.ClickableSpanImpl.class);
+            int position = 0;
+            for (ClickableImageSpanWrapper.ClickableSpanImpl span : spans) {
+                Chips chips = getChips(position);
+                span.setOnClickListener(adapter.getChipsClickListener(position, chips));
+                position++;
+            }
+        }
     }
 
     private void restoreChipsList(Bundle bundle) {

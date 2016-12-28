@@ -67,7 +67,13 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         adapter = new ChipsAdapter(this, popupCreator, suggestionsIdHolder,
-                chipsIdHolder, invalidChipsIdHolder, list);
+                chipsIdHolder, invalidChipsIdHolder, list, chipsView1);
         chipsView1.setAdapter(adapter);
+    }
+
+    @Override
+    protected void onPause() {
+        adapter.hidePopup();
+        super.onPause();
     }
 }

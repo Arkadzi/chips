@@ -13,8 +13,7 @@ import me.humennyi.arkadii.chips.ChipsView;
 
 public interface ChipsHandler {
     Drawable getChipsDrawable(Chips chips);
-    View.OnClickListener getChipsClickListener(ChipsView chipsView, int chipsPosition, Chips chips);
-
+    View.OnClickListener getChipsClickListener(int chipsPosition, Chips chips);
     @Nullable
     Chips getChipsByText(String text);
 }
