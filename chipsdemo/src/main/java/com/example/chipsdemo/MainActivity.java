@@ -1,14 +1,18 @@
 package com.example.chipsdemo;
 
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ContextThemeWrapper;
 import android.support.v7.widget.ListPopupWindow;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.FrameLayout;
 import android.widget.PopupWindow;
 
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,39 +56,21 @@ public class MainActivity extends AppCompatActivity {
         list1.add("asd");
         listPopupWindow.setAdapter(new ArrayAdapter<String>(getBaseContext(), android.R.layout.simple_list_item_1, android.R.id.text1, list1));
         listPopupWindow.setModal(false);
-
         listPopupWindow.setAnchorView(chipsView1);
-        findViewById(R.id.bShow).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.e("MainActivity", "show popup");
-                listPopupWindow.show();
-            }
-        });
-        findViewById(R.id.bHide).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.e("MainActivity", "hide");
-                listPopupWindow.dismiss();
-            }
-        });
     }
 
-
-
     @Override
-    public void onDetachedFromWindow() {
-        if (listPopupWindow != null) {
-            Log.e("MainActivity", "dismiss");
+    protected void onResume() {
+        super.onResume();
 
-            listPopupWindow.dismiss();
-        }
-        super.onDetachedFromWindow();
     }
 
     @Override
     protected void onPause() {
-
+        if (listPopupWindow != null) {
+            Log.e("MainActivity", "dismiss");
+            listPopupWindow.dismiss();
+        }
         super.onPause();
     }
 }

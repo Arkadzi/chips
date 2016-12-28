@@ -11,6 +11,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.AppCompatMultiAutoCompleteTextView;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
@@ -33,7 +34,7 @@ import java.util.List;
 
 import me.humennyi.arkadii.chips.adapter.ChipsAdapter;
 
-public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickListener {
+public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnItemClickListener {
     public static final String SUPER_STATE = "superState";
     public static final String CHIPS = "chips";
     public static final String SPAN_SEPARATOR = ", ";

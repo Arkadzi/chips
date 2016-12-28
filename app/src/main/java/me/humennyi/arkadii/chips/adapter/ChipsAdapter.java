@@ -11,7 +11,6 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Filter;
 import android.widget.Filterable;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,6 +70,7 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
         }
         return false;
     }
+
     @Override
     public int getCount() {
         return currentSuggestions.size();
@@ -180,16 +180,6 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
             popupAdapter.setChips(chips);
             listPopupWindow.show();
         }
-
-
-        // Inflate the custom layout/view
-//                View customView = popupCreator.getPopupView(layoutInflater, null, chips);
-//                PopupWindow mPopupWindow = new PopupWindow(
-//                        customView
-//                );
-//                mPopupWindow.setOutsideTouchable(true);
-//                mPopupWindow.setFocusable(true);
-//                mPopupWindow.showAsDropDown(chipsView);
     }
 
     public void setChipsClickListener(@Nullable OnChipsClickListener chipsClickListener) {
@@ -204,13 +194,13 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
         View getPopupView(LayoutInflater inflater, ViewGroup parent, Chips chips);
     }
 
-    public static class PopupAdapter extends BaseAdapter {
+    private static class PopupAdapter extends BaseAdapter {
         private final List<Chips> singleChips = new ArrayList<>();
         private final PopupCreator popupCreator;
         private final LayoutInflater inflater;
         private ListPopupWindow listPopupWindow;
 
-        public PopupAdapter(PopupCreator popupCreator, LayoutInflater inflater, ListPopupWindow listPopupWindow) {
+        PopupAdapter(PopupCreator popupCreator, LayoutInflater inflater, ListPopupWindow listPopupWindow) {
             this.popupCreator = popupCreator;
             this.inflater = inflater;
             this.listPopupWindow = listPopupWindow;
@@ -233,9 +223,8 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            Log.e("ChipsAdapter", "getAdapter");
             View popupView = popupCreator.getPopupView(inflater, parent, this.getItem(position));
-            listPopupWindow.setWidth(ChipsUtils.measureContentWidth(popupView));
+            listPopupWindow.setContentWidth(ChipsUtils.measureContentWidth(popupView));
             return popupView;
         }
 
