@@ -128,12 +128,6 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         return super.dispatchKeyEvent(event);
     }
 
-    @Override
-    protected void onDetachedFromWindow() {
-        Log.e("ChipsView", "onDetachedFromWindow " + getAdapter().hidePopup());
-
-        super.onDetachedFromWindow();
-    }
 
     private String removeChips(String source, int position) {
         chips.remove(position);
@@ -251,19 +245,19 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
 
     @Override
     public Parcelable onSaveInstanceState() {
-        Log.e("ChipsView", "onSaveInstanceState");
+        Editable text = getText();
+        ChipsAdapter adapter = getAdapter();
+        if (text instanceof SpannableStringBuilder && adapter != null) {
+            ClickableImageSpanWrapper.ClickableSpanImpl[] spans =
+                    text.getSpans(0, text.length(), ClickableImageSpanWrapper.ClickableSpanImpl.class);
+            for (ClickableImageSpanWrapper.ClickableSpanImpl span : spans) {
+                span.setOnClickListener(null);
+            }
+        }
         Bundle bundle = new Bundle();
         bundle.putParcelable(SUPER_STATE, super.onSaveInstanceState());
         bundle.putParcelableArrayList(CHIPS, chips);
-        Editable text = getText();
-        ChipsAdapter adapter = getAdapter();
-        getAdapter().hidePopup();
-        if (text instanceof SpannableStringBuilder && adapter != null) {
-            ClickableImageSpanWrapper.ClickableSpanImpl[] spans = text.getSpans(0, text.length(), ClickableImageSpanWrapper.ClickableSpanImpl.class);
-            for (ClickableImageSpanWrapper.ClickableSpanImpl span : spans) {
-                text.removeSpan(span);
-            }
-        }
+
         return bundle;
     }
 
@@ -278,7 +272,6 @@ public class ChipsView extends MultiAutoCompleteTextView implements OnItemClickL
         Editable text = getText();
         ChipsAdapter adapter = getAdapter();
         if (text instanceof SpannableStringBuilder && adapter != null) {
-
             ClickableImageSpanWrapper.ClickableSpanImpl[] spans = text.getSpans(0, text.length(), ClickableImageSpanWrapper.ClickableSpanImpl.class);
             int position = 0;
             for (ClickableImageSpanWrapper.ClickableSpanImpl span : spans) {

@@ -1,14 +1,13 @@
 package com.example.chipsdemo;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.LayoutInflater;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.view.ContextThemeWrapper;
+import android.support.v7.widget.ListPopupWindow;
+import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.ArrayAdapter;
+import android.widget.PopupWindow;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ChipsView chipsView1;
     private ChipsAdapter adapter;
+    private ListPopupWindow listPopupWindow;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,36 +44,47 @@ public class MainActivity extends AppCompatActivity {
         list.add(new Chips("zxczxczxczxc", R.drawable.down_arrow));
         list.add(new Chips("zxczxczxczxczxc", R.drawable.down_arrow));
 
-        ChipsAdapter.PopupCreator popupCreator = new ChipsAdapter.PopupCreator() {
-            @Override
-            public View getPopupView(LayoutInflater inflater, ViewGroup parent, final Chips chips) {
-                final View view = inflater.inflate(R.layout.popup_view, parent, false);
-                View.OnClickListener onClickListener = new View.OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-                        CharSequence text = ((Button) v).getText();
-                        Toast.makeText(MainActivity.this, chips.getText() + " " + text, Toast.LENGTH_SHORT).show();
-                    }
-                };
-                view.findViewById(R.id.button1).setOnClickListener(onClickListener);
-                view.findViewById(R.id.button2).setOnClickListener(onClickListener);
-                view.findViewById(R.id.button3).setOnClickListener(onClickListener);
-                ((TextView) view.findViewById(R.id.popup_text)).setText(chips.getText());
-                if (chips.getDrawableId() > 0) {
-                    ((ImageView) view.findViewById(R.id.popup_image)).setImageResource(chips.getDrawableId());
-                }
-                return view;
-            }
-        };
-        adapter = new ChipsAdapter(this, popupCreator, suggestionsIdHolder,
+        adapter = new ChipsAdapter(this, new MyPopupCreator(), suggestionsIdHolder,
                 chipsIdHolder, invalidChipsIdHolder, list, chipsView1);
         chipsView1.setAdapter(adapter);
+        listPopupWindow = new ListPopupWindow(new ContextThemeWrapper(getApplicationContext(), R.style.AppTheme));
+        List<String> list1 = new ArrayList<>();
+        list1.add("asd");
+        listPopupWindow.setAdapter(new ArrayAdapter<String>(getBaseContext(), android.R.layout.simple_list_item_1, android.R.id.text1, list1));
+        listPopupWindow.setModal(false);
+
+        listPopupWindow.setAnchorView(chipsView1);
+        findViewById(R.id.bShow).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.e("MainActivity", "show popup");
+                listPopupWindow.show();
+            }
+        });
+        findViewById(R.id.bHide).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.e("MainActivity", "hide");
+                listPopupWindow.dismiss();
+            }
+        });
+    }
+
+
+
+    @Override
+    public void onDetachedFromWindow() {
+        if (listPopupWindow != null) {
+            Log.e("MainActivity", "dismiss");
+
+            listPopupWindow.dismiss();
+        }
+        super.onDetachedFromWindow();
     }
 
     @Override
     protected void onPause() {
-        adapter.hidePopup();
+
         super.onPause();
     }
 }

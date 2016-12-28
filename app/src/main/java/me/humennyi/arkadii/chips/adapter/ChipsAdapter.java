@@ -204,13 +204,13 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
         View getPopupView(LayoutInflater inflater, ViewGroup parent, Chips chips);
     }
 
-    private static class PopupAdapter extends BaseAdapter {
+    public static class PopupAdapter extends BaseAdapter {
         private final List<Chips> singleChips = new ArrayList<>();
         private final PopupCreator popupCreator;
         private final LayoutInflater inflater;
         private ListPopupWindow listPopupWindow;
 
-        PopupAdapter(PopupCreator popupCreator, LayoutInflater inflater, ListPopupWindow listPopupWindow) {
+        public PopupAdapter(PopupCreator popupCreator, LayoutInflater inflater, ListPopupWindow listPopupWindow) {
             this.popupCreator = popupCreator;
             this.inflater = inflater;
             this.listPopupWindow = listPopupWindow;
@@ -239,7 +239,7 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
             return popupView;
         }
 
-        protected final void setChips(Chips chips) {
+        public final void setChips(Chips chips) {
             this.singleChips.clear();
             this.singleChips.add(chips);
         }

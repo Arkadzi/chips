@@ -31,19 +31,16 @@ public class ClickableImageSpanWrapper {
         private View.OnClickListener onClickListener;
 
         public ClickableSpanImpl(@Nullable View.OnClickListener onClickListener) {
-            Log.e("Listener", "create " + onClickListener + " " + hashCode());
             this.onClickListener = onClickListener;
         }
 
         public void setOnClickListener(@Nullable View.OnClickListener onClickListener) {
-            Log.e("Listener", "set " + onClickListener + " " + hashCode());
             this.onClickListener = onClickListener;
         }
 
         @Override
         public void onClick(View widget) {
             if (onClickListener != null) {
-                Log.e("Listener", String.valueOf(hashCode()));
                 onClickListener.onClick(widget);
             }
         }
