@@ -18,6 +18,7 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.AdapterView;
@@ -79,6 +80,8 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
     }
 
     public void init(Context context, AttributeSet attrs) {
+        Log.e("Widget", "constructor " + String.valueOf(hashCode()));
+
         TypedArray array = null;
         try {
             array = context.obtainStyledAttributes(attrs, R.styleable.ChipsView);
@@ -242,8 +245,13 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
 
 
     @Override
-    public Parcelable onSaveInstanceState() {
+    protected void onDetachedFromWindow() {
         removeClickableSpanListeners();
+        super.onDetachedFromWindow();
+    }
+
+    @Override
+    public Parcelable onSaveInstanceState() {
         Bundle bundle = new Bundle();
         bundle.putParcelable(SUPER_STATE, super.onSaveInstanceState());
         bundle.putParcelableArrayList(CHIPS, chips);

@@ -113,8 +113,8 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
     public OnSpanClickListener getChipsClickListener(final int chipsPosition, final Chips chips) {
         return new OnSpanClickListener() {
             @Override
-            public void onClick(ChipsView widget, ClickableSpan span) {
-                showPopup(chips, span);
+            public void onClick(ChipsView widget, int xOffset, int yOffset) {
+                showPopup(chips, xOffset, yOffset);
                 if (chipsClickListener != null) {
                     chipsClickListener.onChipsClick(chipsPosition, chips);
                 }
@@ -176,9 +176,11 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
         }
     };
 
-    private void showPopup(Chips chips, ClickableSpan span) {
+    private void showPopup(Chips chips, int xOffset, int yOffset) {
         if (popupAdapter != null && listPopupWindow != null) {
             popupAdapter.setChips(chips);
+            listPopupWindow.setHorizontalOffset(xOffset);
+            listPopupWindow.setVerticalOffset(yOffset);
             listPopupWindow.show();
         }
     }
