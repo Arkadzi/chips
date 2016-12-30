@@ -27,6 +27,7 @@ import android.widget.Filterable;
 import android.widget.ListAdapter;
 import android.widget.MultiAutoCompleteTextView;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -254,7 +255,7 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
     public Parcelable onSaveInstanceState() {
         Bundle bundle = new Bundle();
         bundle.putParcelable(SUPER_STATE, super.onSaveInstanceState());
-        bundle.putParcelableArrayList(CHIPS, chips);
+        bundle.putSerializable(CHIPS, chips);
 
         return bundle;
     }
@@ -297,10 +298,10 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
     }
 
     private void restoreChipsList(Bundle bundle) {
-        ArrayList<Parcelable> chipsList = bundle.getParcelableArrayList(CHIPS);
+        List<Serializable> chipsList = (List<Serializable>) bundle.getSerializable(CHIPS);
         this.chips.clear();
         if (chipsList != null) {
-            for (Parcelable chips : chipsList) {
+            for (Serializable chips : chipsList) {
                 this.chips.add((Chips) chips);
             }
         }
