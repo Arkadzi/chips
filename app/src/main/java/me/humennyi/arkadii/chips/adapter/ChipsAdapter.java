@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.ListPopupWindow;
-import android.text.style.ClickableSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import me.humennyi.arkadii.chips.Chips;
+import me.humennyi.arkadii.chips.ChipsValidator;
 import me.humennyi.arkadii.chips.ChipsView;
 import me.humennyi.arkadii.chips.OnSpanClickListener;
 
@@ -22,42 +22,43 @@ import me.humennyi.arkadii.chips.OnSpanClickListener;
  * Created by arkadii on 12/21/16.
  */
 
-public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterable {
-    private final List<Chips> suggestionData = new ArrayList<>();
-    private final List<Chips> currentSuggestions = new ArrayList<>();
+public abstract class ChipsAdapter<T extends Chips> extends BaseAdapter implements ChipsHandler, Filterable {
+    private final List<T> suggestionData = new ArrayList<>();
+    private final List<T> currentSuggestions = new ArrayList<>();
     private final LayoutInflater layoutInflater;
     private final Context context;
-    private ChipsIdHolder suggestionIdHolder;
-    private ChipsIdHolder chipsIdHolder;
-    private ChipsIdHolder invalidChipsIdHolder;
+    private final ChipsIdHolder suggestionIdHolder;
+    private final ChipsIdHolder chipsIdHolder;
+    private final ChipsIdHolder invalidChipsIdHolder;
     @Nullable
     private PopupAdapter popupAdapter;
     @Nullable
     private ListPopupWindow listPopupWindow;
     @Nullable
-    private OnChipsClickListener chipsClickListener;
+    private OnChipsClickListener<T> chipsClickListener;
+    @Nullable
+    private ChipsValidator<T> chipsValidator;
 
-    public ChipsAdapter(Context context, @Nullable PopupCreator popupCreator,
+    public ChipsAdapter(Context context,
                         ChipsIdHolder suggestionIdHolder, ChipsIdHolder chipsIdHolder,
                         ChipsIdHolder invalidChipsIdHolder,
-                        @Nullable List<Chips> suggestions, ChipsView chipsView) {
+                        @Nullable List<T> suggestions, ChipsView chipsView) {
         this.layoutInflater = LayoutInflater.from(context);
         this.context = context;
         this.suggestionIdHolder = suggestionIdHolder;
         this.chipsIdHolder = chipsIdHolder;
         this.invalidChipsIdHolder = invalidChipsIdHolder;
-        if (popupCreator != null) {
+        if (hasPopup()) {
             listPopupWindow = new ListPopupWindow(context);
-            popupAdapter = new PopupAdapter(popupCreator, layoutInflater, listPopupWindow);
+            popupAdapter = new PopupAdapter();
             listPopupWindow.setAdapter(popupAdapter);
             listPopupWindow.setModal(false);
             listPopupWindow.setAnchorView(chipsView);
-
         }
         setSuggestionData(suggestions);
     }
 
-    public void setSuggestionData(@Nullable List<Chips> chips) {
+    public void setSuggestionData(@Nullable List<T> chips) {
         this.suggestionData.clear();
         if (chips != null) {
             this.suggestionData.addAll(chips);
@@ -78,7 +79,7 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
     }
 
     @Override
-    public Chips getItem(int position) {
+    public T getItem(int position) {
         return currentSuggestions.get(position);
     }
 
@@ -103,20 +104,20 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
     }
 
     @Override
-    public Drawable getChipsDrawable(Chips chips) {
-        ChipsIdHolder idHolder = chips.isValid() ? chipsIdHolder : invalidChipsIdHolder;
+    public Drawable getChipsDrawable(Chips chips, boolean isChipsValid) {
+        ChipsIdHolder idHolder = isChipsValid ? chipsIdHolder : invalidChipsIdHolder;
         return ChipsUtils.generateDrawable(context, layoutInflater, chips, idHolder);
     }
-
 
     @Override
     public OnSpanClickListener getChipsClickListener(final int chipsPosition, final Chips chips) {
         return new OnSpanClickListener() {
             @Override
             public void onClick(ChipsView widget, int xOffset, int yOffset) {
-                showPopup(chips, xOffset, yOffset);
+                T typedChips =(T) chips;
+                showPopup(typedChips, xOffset, yOffset);
                 if (chipsClickListener != null) {
-                    chipsClickListener.onChipsClick(chipsPosition, chips);
+                    chipsClickListener.onChipsClick(chipsPosition, typedChips);
                 }
             }
         };
@@ -131,6 +132,11 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
             }
         }
         return null;
+    }
+
+    @Override
+    public boolean isChipsValid(Chips chips) {
+        return chipsValidator == null || chipsValidator.isValid((T) chips);
     }
 
     @Override
@@ -151,7 +157,7 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
             if (constraint != null) {
                 currentSuggestions.clear();
                 try {
-                    for (Chips chips : suggestionData) {
+                    for (T chips : suggestionData) {
                         if (chips.getText().toLowerCase().startsWith(
                                 constraint.toString().toLowerCase())) {
                             currentSuggestions.add(chips);
@@ -176,7 +182,7 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
         }
     };
 
-    private void showPopup(Chips chips, int xOffset, int yOffset) {
+    private void showPopup(T chips, int xOffset, int yOffset) {
         if (popupAdapter != null && listPopupWindow != null) {
             popupAdapter.setChips(chips);
             listPopupWindow.setHorizontalOffset(xOffset);
@@ -185,29 +191,25 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
         }
     }
 
-    public void setChipsClickListener(@Nullable OnChipsClickListener chipsClickListener) {
+    public void setChipsClickListener(@Nullable OnChipsClickListener<T> chipsClickListener) {
         this.chipsClickListener = chipsClickListener;
     }
 
-    public interface OnChipsClickListener {
-        void onChipsClick(int position, Chips chips);
+    public void setChipsValidator(@Nullable ChipsValidator<T> chipsValidator) {
+        this.chipsValidator = chipsValidator;
     }
 
-    public interface PopupCreator {
-        View getPopupView(LayoutInflater inflater, ViewGroup parent, Chips chips);
+    @Nullable
+    protected abstract View getPopupView(ViewGroup parent, T item);
+
+    protected abstract boolean hasPopup();
+
+    public interface OnChipsClickListener<T extends Chips> {
+        void onChipsClick(int position, T chips);
     }
 
-    private static class PopupAdapter extends BaseAdapter {
-        private final List<Chips> singleChips = new ArrayList<>();
-        private final PopupCreator popupCreator;
-        private final LayoutInflater inflater;
-        private ListPopupWindow listPopupWindow;
-
-        PopupAdapter(PopupCreator popupCreator, LayoutInflater inflater, ListPopupWindow listPopupWindow) {
-            this.popupCreator = popupCreator;
-            this.inflater = inflater;
-            this.listPopupWindow = listPopupWindow;
-        }
+    private class PopupAdapter extends BaseAdapter {
+        private final List<T> singleChips = new ArrayList<>();
 
         @Override
         public int getCount() {
@@ -215,7 +217,7 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
         }
 
         @Override
-        public Chips getItem(int position) {
+        public T getItem(int position) {
             return singleChips.get(position);
         }
 
@@ -226,12 +228,14 @@ public class ChipsAdapter extends BaseAdapter implements ChipsHandler, Filterabl
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            View popupView = popupCreator.getPopupView(inflater, parent, this.getItem(position));
-            listPopupWindow.setContentWidth(ChipsUtils.measureContentWidth(popupView));
+            View popupView = getPopupView(parent, this.getItem(position));
+            if (listPopupWindow != null) {
+                listPopupWindow.setContentWidth(ChipsUtils.measureContentWidth(popupView));
+            }
             return popupView;
         }
 
-        public final void setChips(Chips chips) {
+        public final void setChips(T chips) {
             this.singleChips.clear();
             this.singleChips.add(chips);
         }

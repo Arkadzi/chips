@@ -13,8 +13,11 @@ import me.humennyi.arkadii.chips.OnSpanClickListener;
  */
 
 public interface ChipsHandler {
-    Drawable getChipsDrawable(Chips chips);
+    Drawable getChipsDrawable(Chips chips, boolean isChipsValid);
     OnSpanClickListener getChipsClickListener(int chipsPosition, Chips chips);
     @Nullable
     Chips getChipsByText(String text);
+    Chips instantiateNewChips(String text);
+
+    boolean isChipsValid(Chips chips);
 }

@@ -11,6 +11,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
+import android.support.v4.util.Pair;
 import android.support.v7.widget.AppCompatMultiAutoCompleteTextView;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
@@ -32,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import me.humennyi.arkadii.chips.adapter.ChipsAdapter;
+import me.humennyi.arkadii.chips.exception.InvalidChipsException;
 
 public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnItemClickListener {
     public static final String SUPER_STATE = "superState";
@@ -41,6 +43,12 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
     private String patternRegex = ".+";
     private final ArrayList<Chips> chips = new ArrayList<>();
     private boolean shouldRedraw;
+    private ChipsValidator<Chips> textValidator = new ChipsValidator<Chips>() {
+        @Override
+        public boolean isValid(Chips chips) {
+            return chips.getText().matches(patternRegex);
+        }
+    };
     private TextWatcher textWatcher = new SimpleTextWatcher() {
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -102,17 +110,17 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
     private void fetchAttributes(TypedArray array) {
         final int id = array.getResourceId(R.styleable.ChipsView_separators, 0);
 
+        List<String> separators = new ArrayList<>();
+        separators.add(",");
         if (id != 0) {
             final String[] values = getResources().getStringArray(id);
-            List<String> separators = new ArrayList<>();
             for (String value : values) {
                 if (!value.contains(",")) {
                     separators.add(value);
                 }
             }
-            separators.add(",");
-            separatorRegex = "(" + TextUtils.join("|", separators) + ")+[ |\n]*";
         }
+        separatorRegex = "(" + TextUtils.join("|", separators) + ")+[ |\n]*";
 
         String pattern = array.getString(R.styleable.ChipsView_pattern);
         if (pattern != null) {
@@ -157,10 +165,9 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
             for (int i = chips.size(); i < chipsCount; i++) {
                 Chips chips = adapter.getChipsByText(chipsText[i]);
                 if (chips == null) {
-                    chips = new Chips(chipsText[i], 0, isValidChipsText(chipsText[i]));
+                    chips = adapter.instantiateNewChips(chipsText[i]);
                 } else {
-                    chips = new Chips(chips.getText(), chips.getDrawableId(),
-                            isValidChipsText(chips.getText()));
+                    chips = chips.copy();
                 }
                 this.chips.add(chips);
                 shouldRedraw = true;
@@ -207,8 +214,10 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
         final SpannableStringBuilder ssb = new SpannableStringBuilder(text);
         for (int i = 0; i < chipsCount; i++) {
             String chipsName = chipsText[i];
-            Drawable chipsDrawable = adapter.getChipsDrawable(getChips(i));
-            OnSpanClickListener chipsClickListener = adapter.getChipsClickListener(i, getChips(i));
+            Chips chips = getChips(i);
+            boolean chipsValid = textValidator.isValid(chips) && adapter.isChipsValid(chips);
+            Drawable chipsDrawable = adapter.getChipsDrawable(chips, chipsValid);
+            OnSpanClickListener chipsClickListener = adapter.getChipsClickListener(i, chips);
             ClickableImageSpanWrapper.wrap(ssb, chipsDrawable, chipsClickListener,
                     spanStart, spanStart + chipsName.length() + 1);
             spanStart = spanStart + chipsName.length() + 2;
@@ -216,9 +225,6 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
         return ssb;
     }
 
-    private boolean isValidChipsText(String chipsName) {
-        return chipsName.matches(patternRegex);
-    }
 
     @Override
     public <T extends ListAdapter & Filterable> void setAdapter(T adapter) {
@@ -244,6 +250,34 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
         }
     }
 
+    public List<Chips> getChips() throws InvalidChipsException {
+        List<Chips> result = new ArrayList<>();
+        List<Pair<Integer, Chips>> invalidChips = new ArrayList<>();
+
+        String s = prepareSource(getText().toString());
+        String[] split = s.split(SPAN_SEPARATOR);
+        int length = split.length;
+        ChipsAdapter adapter = getAdapter();
+        for (int i = 0; i < length; i++) {
+            Chips chips = null;
+            if (i < this.chips.size()) {
+                chips = this.chips.get(i).copy();
+            } else if (!split[i].isEmpty()){
+                chips = adapter.instantiateNewChips(split[i]);
+            }
+            if (chips != null) {
+                if (!textValidator.isValid(chips) || !adapter.isChipsValid(chips)) {
+                    invalidChips.add(new Pair<>(i, chips));
+                } else {
+                    result.add(chips);
+                }
+            }
+        }
+        if (!invalidChips.isEmpty()) {
+            throw new InvalidChipsException("There are invalid chips", invalidChips);
+        }
+        return result;
+    }
 
     @Override
     protected void onDetachedFromWindow() {

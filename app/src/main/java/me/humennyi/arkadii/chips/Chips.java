@@ -15,16 +15,10 @@ public class Chips implements Serializable {
     private String text;
     @DrawableRes
     private int drawableId;
-    private boolean isValid;
 
     public Chips(String text, int drawableId) {
-        this(text, drawableId, true);
-    }
-
-    public Chips(String text, int drawableId, boolean isValid) {
         this.text = text;
         this.drawableId = drawableId;
-        this.isValid = isValid;
     }
 
     public String getText() {
@@ -43,16 +37,8 @@ public class Chips implements Serializable {
         this.drawableId = drawableId;
     }
 
-    public boolean isValid() {
-        return isValid;
-    }
-
-    public void setValid(boolean valid) {
-        isValid = valid;
-    }
-
-    public Chips copyValid() {
-        return new Chips(text, drawableId, true);
+    public Chips copy() {
+        return new Chips(text, drawableId);
     }
 //
 //    @Override
@@ -68,7 +54,6 @@ public class Chips implements Serializable {
         return "Chips{" +
                 "text='" + text + '\'' +
                 ", drawableId=" + drawableId +
-                ", isValid=" + isValid +
                 '}';
     }
 

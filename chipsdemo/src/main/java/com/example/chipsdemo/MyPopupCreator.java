@@ -14,14 +14,13 @@ import me.humennyi.arkadii.chips.adapter.ChipsAdapter;
 /**
  * Created by arkadii on 12/28/16.
  */
-class MyPopupCreator implements ChipsAdapter.PopupCreator {
+class MyPopupCreator {
 //    private MainActivity mainActivity;
 
 //    public MyPopupCreator(MainActivity mainActivity) {
 //        this.mainActivity = mainActivity;
 //    }
 
-    @Override
     public View getPopupView(LayoutInflater inflater, ViewGroup parent, final Chips chips) {
         final View view = inflater.inflate(R.layout.popup_view, parent, false);
         View.OnClickListener onClickListener = new View.OnClickListener() {

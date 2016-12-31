@@ -12,17 +12,27 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.chipsdemo.MainActivity">
 
-
     <me.humennyi.arkadii.chips.ChipsView
         android:id="@+id/chipsView1"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:completionThreshold="1"
+        android:hint="Simplest" />
+
+    <me.humennyi.arkadii.chips.ChipsView
+        android:id="@+id/chipsView2"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:completionThreshold="1"
+        android:hint="Validates (\\w{1,6})"
         app:pattern="\\w{1,6}"
         app:separators="@array/separator_list" />
 
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+    <Button
+    android:id="@+id/check"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="Check"/>
+
 
 </LinearLayout>
