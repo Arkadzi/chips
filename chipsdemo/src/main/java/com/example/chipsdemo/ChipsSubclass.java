@@ -30,8 +30,6 @@ public class ChipsSubclass extends Chips {
 
     @Override
     public String toString() {
-        return "ChipsSubclass{" +
-                "someField=" + someField +
-                '}';
+        return "someField = " + someField + ", text = " + getText();
     }
 }

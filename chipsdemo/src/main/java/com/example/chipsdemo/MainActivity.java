@@ -50,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
         ChipsAdapter<Chips> adapter1 = new SimpleChipsAdapter(this, suggestionsIdHolder,
                 chipsIdHolder, invalidChipsIdHolder, list1, chipsView1);
         chipsView1.setAdapter(adapter1);
-
         //Initialize second case
         List<ChipsSubclass> list2 = new ArrayList<>();
         list2.add(new ChipsSubclass("qweqwe", R.drawable.me_gusta, 5));
@@ -86,11 +85,17 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.check).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                List<Chips> chips;
+                String title;
                 try {
-                    Log.e("Chips", "valid " + chipsView2.getChips());
+                    title = "All chips are valid";
+                    chips = chipsView2.getChips();
                 } catch (InvalidChipsException e) {
-                    Log.e("Chips", "invalid " + e.getChips());
+                    title = "There are invalid chips";
+                    chips = e.getChips();
                 }
+                ListDialog listDialog = ListDialog.newInstance(chips, title);
+                listDialog.show(getSupportFragmentManager(), ListDialog.TAG);
             }
         });
 
