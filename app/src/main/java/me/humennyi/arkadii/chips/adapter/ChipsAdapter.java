@@ -30,6 +30,7 @@ public abstract class ChipsAdapter<T extends Chips> extends BaseAdapter implemen
     private final ChipsIdHolder suggestionIdHolder;
     private final ChipsIdHolder chipsIdHolder;
     private final ChipsIdHolder invalidChipsIdHolder;
+    private ChipsView chipsView;
     @Nullable
     private PopupAdapter popupAdapter;
     @Nullable
@@ -48,6 +49,7 @@ public abstract class ChipsAdapter<T extends Chips> extends BaseAdapter implemen
         this.suggestionIdHolder = suggestionIdHolder;
         this.chipsIdHolder = chipsIdHolder;
         this.invalidChipsIdHolder = invalidChipsIdHolder;
+        this.chipsView = chipsView;
         if (hasPopup()) {
             listPopupWindow = new ListPopupWindow(context);
             popupAdapter = new PopupAdapter();
@@ -115,7 +117,7 @@ public abstract class ChipsAdapter<T extends Chips> extends BaseAdapter implemen
             @Override
             public void onClick(ChipsView widget, int xOffset, int yOffset) {
                 T typedChips =(T) chips;
-                showPopup(typedChips, xOffset, yOffset);
+                showPopup(chipsPosition, typedChips, xOffset, yOffset);
                 if (chipsClickListener != null) {
                     chipsClickListener.onChipsClick(chipsPosition, typedChips);
                 }
@@ -158,9 +160,13 @@ public abstract class ChipsAdapter<T extends Chips> extends BaseAdapter implemen
                 currentSuggestions.clear();
                 try {
                     for (T chips : suggestionData) {
-                        if (chips.getText().toLowerCase().startsWith(
-                                constraint.toString().toLowerCase())) {
-                            currentSuggestions.add(chips);
+                        String[] suggestionText = chips.getSuggestionText();
+                        for (String suggestion : suggestionText) {
+                            String prefix = constraint.toString().toLowerCase();
+                            if (suggestion.toLowerCase().startsWith(prefix)) {
+                                currentSuggestions.add(chips);
+                                break;
+                            }
                         }
                     }
                 } catch (Exception ignored) {
@@ -182,9 +188,13 @@ public abstract class ChipsAdapter<T extends Chips> extends BaseAdapter implemen
         }
     };
 
-    private void showPopup(T chips, int xOffset, int yOffset) {
+    protected LayoutInflater getLayoutInflater() {
+        return layoutInflater;
+    }
+
+    private void showPopup(int chipsPosition, T chips, int xOffset, int yOffset) {
         if (popupAdapter != null && listPopupWindow != null) {
-            popupAdapter.setChips(chips);
+            popupAdapter.setChips(chips, chipsPosition);
             listPopupWindow.setHorizontalOffset(xOffset);
             listPopupWindow.setVerticalOffset(yOffset);
             listPopupWindow.show();
@@ -200,7 +210,7 @@ public abstract class ChipsAdapter<T extends Chips> extends BaseAdapter implemen
     }
 
     @Nullable
-    protected abstract View getPopupView(ViewGroup parent, T item);
+    protected abstract View getPopupView(ViewGroup parent, int position, T item);
 
     protected abstract boolean hasPopup();
 
@@ -210,6 +220,7 @@ public abstract class ChipsAdapter<T extends Chips> extends BaseAdapter implemen
 
     private class PopupAdapter extends BaseAdapter {
         private final List<T> singleChips = new ArrayList<>();
+        private int position;
 
         @Override
         public int getCount() {
@@ -228,16 +239,17 @@ public abstract class ChipsAdapter<T extends Chips> extends BaseAdapter implemen
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            View popupView = getPopupView(parent, this.getItem(position));
+            View popupView = getPopupView(parent, this.position, this.getItem(position));
             if (listPopupWindow != null) {
                 listPopupWindow.setContentWidth(ChipsUtils.measureContentWidth(popupView));
             }
             return popupView;
         }
 
-        public final void setChips(T chips) {
+        public final void setChips(T chips, int position) {
             this.singleChips.clear();
             this.singleChips.add(chips);
+            this.position = position;
         }
     }
 }

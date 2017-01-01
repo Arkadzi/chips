@@ -1,9 +1,6 @@
 package me.humennyi.arkadii.chips;
 
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.support.annotation.DrawableRes;
-import android.support.annotation.NonNull;
 
 import java.io.Serializable;
 
@@ -35,6 +32,10 @@ public class Chips implements Serializable {
 
     public void setDrawableId(int drawableId) {
         this.drawableId = drawableId;
+    }
+
+    public String[] getSuggestionText() {
+        return new String[]{getText()};
     }
 
     public Chips copy() {

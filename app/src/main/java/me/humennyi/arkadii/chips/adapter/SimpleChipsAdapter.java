@@ -20,7 +20,7 @@ public class SimpleChipsAdapter extends ChipsAdapter<Chips> {
 
     @Nullable
     @Override
-    protected View getPopupView(ViewGroup parent, Chips item) {
+    protected View getPopupView(ViewGroup parent, int position, Chips item) {
         return null;
     }
 

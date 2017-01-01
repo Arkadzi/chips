@@ -14,25 +14,35 @@
 
     <me.humennyi.arkadii.chips.ChipsView
         android:id="@+id/chipsView1"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:completionThreshold="1"
         android:hint="Simplest" />
 
     <me.humennyi.arkadii.chips.ChipsView
         android:id="@+id/chipsView2"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:completionThreshold="1"
-        android:hint="Validates (\\w{1,6})"
-        app:pattern="\\w{1,6}"
+        android:hint="Validates (.{6,20}, !surname.isEmpty())"
+        app:pattern=".{6,20}"
         app:separators="@array/separator_list" />
 
     <Button
-    android:id="@+id/check"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:text="Check"/>
+        android:id="@+id/check"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Check" />
+
+
+    <me.humennyi.arkadii.chips.ChipsView
+        android:id="@+id/chipsView3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:completionThreshold="1"
+        android:hint="Validates (\\.{6,20}, !surname.isEmpty())"
+        app:pattern="\\.{6,20}"
+        app:separators="@array/separator_list" />
 
 
 </LinearLayout>
