@@ -262,7 +262,7 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
             Chips chips = null;
             if (i < this.chips.size()) {
                 chips = this.chips.get(i).copy();
-            } else if (!split[i].isEmpty()){
+            } else if (!split[i].isEmpty()) {
                 chips = adapter.instantiateNewChips(split[i]);
             }
             if (chips != null) {

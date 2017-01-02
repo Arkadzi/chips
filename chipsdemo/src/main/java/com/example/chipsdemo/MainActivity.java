@@ -3,8 +3,11 @@ package com.example.chipsdemo;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.MenuPopupWindow;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.PopupWindow;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         list1.add(new Chips("zxczxczxczxczxc", R.drawable.down_arrow));
 
         List<Actor> list2 = new ArrayList<>();
-        list2.add(new Actor("Quentin", "Tarantino", R.drawable.me_gusta));
+        list2.add(new Actor("QuentinQuentinQuentin", "Tarantino", R.drawable.me_gusta));
         list2.add(new Actor("Ashton", "Kutcher", R.drawable.me_gusta));
         list2.add(new Actor("Zack", "Snyder", R.drawable.down_arrow));
         list2.add(new Actor("Anthony", "Hopkins", R.drawable.down_arrow));
@@ -56,12 +59,6 @@ public class MainActivity extends AppCompatActivity {
         initFirstView(suggestionsIdHolder, chipsIdHolder, invalidChipsIdHolder, list1);
         initSecondView(suggestionsIdHolder, chipsIdHolder, invalidChipsIdHolder, list2);
         initThirdView(suggestionsIdHolder, chipsIdHolder, invalidChipsIdHolder, list2);
-    }
-
-    private void initThirdView(ChipsIdHolder suggestionsIdHolder, ChipsIdHolder chipsIdHolder, ChipsIdHolder invalidChipsIdHolder, List<Actor> list2) {
-        ChipsAdapter<Actor> adapter3 = new ActorAdapter(this, suggestionsIdHolder,
-                chipsIdHolder, invalidChipsIdHolder, list2, chipsView3);
-        chipsView3.setAdapter(adapter3);
     }
 
     private void initFirstView(ChipsIdHolder suggestionsIdHolder, ChipsIdHolder chipsIdHolder, ChipsIdHolder invalidChipsIdHolder, List<Chips> chips) {
@@ -74,6 +71,10 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.check).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+//                new PopupWindow(getLayoutInflater()
+//                        .inflate(R.layout.popup_view, null), 300, 200, false)
+//                        .showAtLocation(((View) chipsView1.getParent()), Gravity.NO_GRAVITY, 100, 100);
+
                 List<Chips> chips;
                 String title;
                 try {
@@ -93,12 +94,12 @@ public class MainActivity extends AppCompatActivity {
             @Nullable
             @Override
             protected View getPopupView(ViewGroup parent, int position, Actor item) {
-                return null;
+                return getLayoutInflater().inflate(R.layout.popup_view, parent, false);
             }
 
             @Override
             protected boolean hasPopup() {
-                return false;
+                return true;
             }
 
             @Override
@@ -114,5 +115,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         chipsView2.setAdapter(adapter);
+    }
+
+    private void initThirdView(ChipsIdHolder suggestionsIdHolder, ChipsIdHolder chipsIdHolder, ChipsIdHolder invalidChipsIdHolder, List<Actor> list2) {
+        ChipsAdapter<Actor> adapter3 = new ActorAdapter(this, suggestionsIdHolder,
+                chipsIdHolder, invalidChipsIdHolder, list2, chipsView3);
+        chipsView3.setAdapter(adapter3);
     }
 }

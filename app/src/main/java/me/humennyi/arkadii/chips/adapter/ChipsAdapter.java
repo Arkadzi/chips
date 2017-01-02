@@ -4,16 +4,19 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.ListPopupWindow;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Filter;
 import android.widget.Filterable;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import me.humennyi.arkadii.chips.Chips;
+import me.humennyi.arkadii.chips.ChipsPopup;
 import me.humennyi.arkadii.chips.ChipsValidator;
 import me.humennyi.arkadii.chips.ChipsView;
 import me.humennyi.arkadii.chips.OnSpanClickListener;
@@ -34,7 +37,7 @@ public abstract class ChipsAdapter<T extends Chips> extends BaseAdapter implemen
     @Nullable
     private PopupAdapter popupAdapter;
     @Nullable
-    private ListPopupWindow listPopupWindow;
+    private ChipsPopup popup;
     @Nullable
     private OnChipsClickListener<T> chipsClickListener;
     @Nullable
@@ -51,11 +54,12 @@ public abstract class ChipsAdapter<T extends Chips> extends BaseAdapter implemen
         this.invalidChipsIdHolder = invalidChipsIdHolder;
         this.chipsView = chipsView;
         if (hasPopup()) {
-            listPopupWindow = new ListPopupWindow(context);
+            popup = new ChipsPopup(context);
             popupAdapter = new PopupAdapter();
-            listPopupWindow.setAdapter(popupAdapter);
-            listPopupWindow.setModal(false);
-            listPopupWindow.setAnchorView(chipsView);
+            popup.setAdapter(popupAdapter);
+            popup.setModal(false);
+            popup.setInputMethodMode(ListPopupWindow.INPUT_METHOD_NOT_NEEDED);
+            popup.setAnchorView(chipsView);
         }
         setSuggestionData(suggestions);
     }
@@ -68,8 +72,8 @@ public abstract class ChipsAdapter<T extends Chips> extends BaseAdapter implemen
     }
 
     public boolean hidePopup() {
-        if (listPopupWindow != null && listPopupWindow.isShowing()) {
-            listPopupWindow.dismiss();
+        if (popup != null && popup.isShowing()) {
+            popup.dismiss();
             return true;
         }
         return false;
@@ -115,9 +119,9 @@ public abstract class ChipsAdapter<T extends Chips> extends BaseAdapter implemen
     public OnSpanClickListener getChipsClickListener(final int chipsPosition, final Chips chips) {
         return new OnSpanClickListener() {
             @Override
-            public void onClick(ChipsView widget, int xOffset, int yOffset) {
+            public void onClick(ChipsView widget, int xOffset, int yOffsetIfBelow, int yOffsetIfAbove) {
                 T typedChips =(T) chips;
-                showPopup(chipsPosition, typedChips, xOffset, yOffset);
+                showPopup(chipsPosition, typedChips, xOffset, yOffsetIfBelow, yOffsetIfAbove);
                 if (chipsClickListener != null) {
                     chipsClickListener.onChipsClick(chipsPosition, typedChips);
                 }
@@ -192,12 +196,15 @@ public abstract class ChipsAdapter<T extends Chips> extends BaseAdapter implemen
         return layoutInflater;
     }
 
-    private void showPopup(int chipsPosition, T chips, int xOffset, int yOffset) {
-        if (popupAdapter != null && listPopupWindow != null) {
+    private void showPopup(int chipsPosition, T chips, int xOffset, int yOffsetIfBelow, int yOffsetIfAbove) {
+        if (popupAdapter != null && popup != null) {
             popupAdapter.setChips(chips, chipsPosition);
-            listPopupWindow.setHorizontalOffset(xOffset);
-            listPopupWindow.setVerticalOffset(yOffset);
-            listPopupWindow.show();
+            popup.setHorizontalOffset(xOffset);
+            popup.setVerticalOffset(0);
+            popup.show();
+            int offset = popup.isAboveAnchor() ? yOffsetIfAbove : yOffsetIfBelow;
+            popup.setVerticalOffset(offset);
+            popup.show();
         }
     }
 
@@ -240,8 +247,8 @@ public abstract class ChipsAdapter<T extends Chips> extends BaseAdapter implemen
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View popupView = getPopupView(parent, this.position, this.getItem(position));
-            if (listPopupWindow != null) {
-                listPopupWindow.setContentWidth(ChipsUtils.measureContentWidth(popupView));
+            if (popup != null) {
+                popup.setContentWidth(ChipsUtils.measureContentWidth(popupView));
             }
             return popupView;
         }

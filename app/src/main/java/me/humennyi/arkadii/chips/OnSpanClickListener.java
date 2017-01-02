@@ -8,5 +8,5 @@ import android.view.View;
  */
 
 public interface OnSpanClickListener {
-    void onClick(ChipsView widget, int xOffset, int yOffset);
+    void onClick(ChipsView widget, int xOffset, int yOffsetIfBelow, int yOffsetIfAbove);
 }
