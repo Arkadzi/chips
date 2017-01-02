@@ -14,19 +14,22 @@ import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
 import android.support.v7.widget.AppCompatMultiAutoCompleteTextView;
 import android.text.Editable;
+import android.text.Layout;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Filterable;
 import android.widget.ListAdapter;
 import android.widget.MultiAutoCompleteTextView;
+import android.widget.TextView;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -103,7 +106,37 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
         setOnItemClickListener(this);
         addTextChangedListener(textWatcher);
         setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
-        setMovementMethod(LinkMovementMethod.getInstance());
+//        setMovementMethod(CustomMovementMethod.getInstance());
+        setLongClickable(false);
+        setOnTouchListener(
+                new OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View v, MotionEvent event) {
+                        int x = (int) event.getX();
+                        int y = (int) event.getY();
+
+                        x -= getTotalPaddingLeft();
+                        y -= getTotalPaddingTop();
+
+                        x += getScrollX();
+                        y += getScrollY();
+
+                        Layout layout = getLayout();
+                        int line = layout.getLineForVertical(y);
+                        int off = layout.getOffsetForHorizontal(line, x);
+
+                        ClickableSpan[] link = getText().getSpans(off, off, ClickableSpan.class);
+                        Log.e("Touch", link.length + " " + line + " " + off + event);
+                        if (link.length != 0) {
+                            if (event.getAction() == MotionEvent.ACTION_UP) {
+                                link[0].onClick(ChipsView.this);
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                }
+        );
 //        setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
     }
 
@@ -244,6 +277,7 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
 
     @Override
     protected void onSelectionChanged(int selStart, int selEnd) {
+        super.onSelectionChanged(selStart, selEnd);
         int length = length();
         if (length != selStart || length != selEnd) {
             setSelection(this.length());
