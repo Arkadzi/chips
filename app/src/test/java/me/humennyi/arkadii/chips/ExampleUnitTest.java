@@ -11,26 +11,44 @@ import static org.junit.Assert.*;
  */
 public class ExampleUnitTest {
     private static final java.lang.String SPAN_SEPARATOR = ", ";
+    String SEPARATOR = ", ";
 
     @Test
     public void addition_isCorrect() throws Exception {
 
-        System.out.println(removeChips("123, ", 0));
-        System.out.println(removeChips("123, 456, 789, ", 0));
-        System.out.println(removeChips("123, 456, 789, ", 1));
-        System.out.println(removeChips("123, 456, 789, ", 2));
+        System.out.println(replaceChips("123, ", 0,"asd"));
+        System.out.println(replaceChips("123, 456, 789, aasd", 0, "asd"));
+        System.out.println(replaceChips("123, 456, 789, fdsfsdf", 1, "asd"));
+        System.out.println(replaceChips("123, 456, 789, asdas", 2, "asd"));
         assertEquals(true, true);
     }
 
-
-    private String removeChips(String source, int position) {
-        String[] split = source.split(SPAN_SEPARATOR);
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < split.length; i++) {
-            if (i != position) {
-                builder.append(split[i] + SPAN_SEPARATOR);
+    private String replaceChips(String source, int position, String what) {
+        String firstPart = "";
+        String lastPart = "";
+        int separatorCount = 0;
+        int i;
+        for (i = 0; i < source.length()-1; i++) {
+            if (source.substring(i).startsWith(SEPARATOR)) {
+                separatorCount++;
+            }
+            if (separatorCount == position) {
+                firstPart = source.substring(0, i);
+                if (!firstPart.isEmpty()){
+                    firstPart += SEPARATOR;
+                }
+                break;
             }
         }
-        return builder.toString();
+        for (int j = i + SEPARATOR.length(); j < source.length()-1; j++) {
+            if (source.substring(j).startsWith(SEPARATOR)) {
+                separatorCount++;
+            }
+            if (separatorCount == position + 1) {
+                lastPart = source.substring(j + SEPARATOR.length());
+                break;
+            }
+        }
+        return firstPart + what + SEPARATOR + lastPart;
     }
 }

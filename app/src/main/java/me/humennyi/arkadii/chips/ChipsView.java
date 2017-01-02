@@ -29,7 +29,6 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Filterable;
 import android.widget.ListAdapter;
 import android.widget.MultiAutoCompleteTextView;
-import android.widget.TextView;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -92,7 +91,6 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
     }
 
     public void init(Context context, AttributeSet attrs) {
-        Log.e("Widget", "constructor " + String.valueOf(hashCode()));
 
         TypedArray array = null;
         try {
@@ -126,7 +124,6 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
                         int off = layout.getOffsetForHorizontal(line, x);
 
                         ClickableSpan[] link = getText().getSpans(off, off, ClickableSpan.class);
-                        Log.e("Touch", link.length + " " + line + " " + off + event);
                         if (link.length != 0) {
                             if (event.getAction() == MotionEvent.ACTION_UP) {
                                 link[0].onClick(ChipsView.this);
@@ -247,7 +244,7 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
         final SpannableStringBuilder ssb = new SpannableStringBuilder(text);
         for (int i = 0; i < chipsCount; i++) {
             String chipsName = chipsText[i];
-            Chips chips = getChips(i);
+            Chips chips = getChipsAt(i);
             boolean chipsValid = textValidator.isValid(chips) && adapter.isChipsValid(chips);
             Drawable chipsDrawable = adapter.getChipsDrawable(chips, chipsValid);
             OnSpanClickListener chipsClickListener = adapter.getChipsClickListener(i, chips);
@@ -295,7 +292,7 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
         for (int i = 0; i < length; i++) {
             Chips chips = null;
             if (i < this.chips.size()) {
-                chips = this.chips.get(i).copy();
+                chips = getChipsAt(i);
             } else if (!split[i].isEmpty()) {
                 chips = adapter.instantiateNewChips(split[i]);
             }
@@ -358,7 +355,7 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
             ClickableSpanImpl[] spans = text.getSpans(0, text.length(), ClickableSpanImpl.class);
             int position = 0;
             for (ClickableSpanImpl span : spans) {
-                Chips chips = getChips(position);
+                Chips chips = getChipsAt(position);
                 span.setOnClickListener(adapter.getChipsClickListener(position, chips));
                 position++;
             }
@@ -375,7 +372,51 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
         }
     }
 
-    public Chips getChips(int position) {
-        return chips.get(position);
+    public Chips getChipsAt(int position) {
+        Chips chips = this.chips.get(position);
+        if (chips != null) {
+            return chips.copy();
+        }
+        return null;
+    }
+
+    public void updateItem(int position, Chips chips) {
+        if (position < this.chips.size()) {
+            this.chips.set(position, chips);
+            String source = getText().toString();
+            String newText = chips.getText();
+            source = replaceChips(source, position, newText);
+            shouldRedraw = true;
+            setChips(source);
+        }
+    }
+
+    private String replaceChips(String source, int position, String what) {
+        String firstPart = "";
+        String lastPart = "";
+        int separatorCount = 0;
+        int i;
+        for (i = 0; i < source.length()-1; i++) {
+            if (source.substring(i).startsWith(SPAN_SEPARATOR)) {
+                separatorCount++;
+            }
+            if (separatorCount == position) {
+                firstPart = source.substring(0, i);
+                if (!firstPart.isEmpty()){
+                    firstPart += SPAN_SEPARATOR;
+                }
+                break;
+            }
+        }
+        for (int j = i + SPAN_SEPARATOR.length(); j < source.length()-1; j++) {
+            if (source.substring(j).startsWith(SPAN_SEPARATOR)) {
+                separatorCount++;
+            }
+            if (separatorCount == position + 1) {
+                lastPart = source.substring(j + SPAN_SEPARATOR.length());
+                break;
+            }
+        }
+        return firstPart + what + SPAN_SEPARATOR + lastPart;
     }
 }

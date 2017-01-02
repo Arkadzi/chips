@@ -16,12 +16,12 @@ import me.humennyi.arkadii.chips.Chips;
  * Created by arkadii on 1/1/17.
  */
 
-public class ListDialog extends DialogFragment {
+public class ListDialogFragment extends DialogFragment {
     public static final String TAG = "list_dialog";
     private static final String CHIPS = "chips";
     private static final String TITLE = "title";
 
-    public static ListDialog newInstance(List<Chips> chips, String title) {
+    public static ListDialogFragment newInstance(List<Chips> chips, String title) {
         ArrayList<Chips> list = new ArrayList<>();
         list.addAll(chips);
 
@@ -29,7 +29,7 @@ public class ListDialog extends DialogFragment {
         args.putSerializable(CHIPS, list);
         args.putString(TITLE, title);
 
-        ListDialog fragment = new ListDialog();
+        ListDialogFragment fragment = new ListDialogFragment();
         fragment.setArguments(args);
         return fragment;
     }

@@ -40,8 +40,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:completionThreshold="1"
-        android:hint="Validates (\\.{6,20}, !surname.isEmpty())"
-        app:pattern="\\.{6,20}"
+        android:hint="Validates (.{6,20}, !surname.isEmpty())"
+        app:pattern=".{6,20}"
         app:separators="@array/separator_list" />
 
 

@@ -18,6 +18,5 @@ public interface ChipsHandler {
     @Nullable
     Chips getChipsByText(String text);
     Chips instantiateNewChips(String text);
-
     boolean isChipsValid(Chips chips);
 }

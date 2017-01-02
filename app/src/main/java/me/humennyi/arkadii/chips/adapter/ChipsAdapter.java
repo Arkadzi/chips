@@ -140,6 +140,10 @@ public abstract class ChipsAdapter<T extends Chips> extends BaseAdapter implemen
         return null;
     }
 
+    public void updateItem(int position, Chips chips) {
+        chipsView.updateItem(position, chips);
+    }
+
     @Override
     public boolean isChipsValid(Chips chips) {
         return chipsValidator == null || chipsValidator.isValid((T) chips);
@@ -196,7 +200,8 @@ public abstract class ChipsAdapter<T extends Chips> extends BaseAdapter implemen
         return layoutInflater;
     }
 
-    private void showPopup(int chipsPosition, T chips, int xOffset, int yOffsetIfBelow, int yOffsetIfAbove) {
+    private void showPopup(int chipsPosition, T chips, int xOffset,
+                           int yOffsetIfBelow, int yOffsetIfAbove) {
         if (popupAdapter != null && popup != null) {
             popupAdapter.setChips(chips, chipsPosition);
             popup.setHorizontalOffset(xOffset);

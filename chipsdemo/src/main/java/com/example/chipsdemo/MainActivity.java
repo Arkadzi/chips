@@ -1,13 +1,13 @@
 package com.example.chipsdemo;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.MenuPopupWindow;
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.PopupWindow;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private ChipsView chipsView1;
     private ChipsView chipsView2;
     private ChipsView chipsView3;
+    private ActorAdapter adapter3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,10 +72,6 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.check).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                new PopupWindow(getLayoutInflater()
-//                        .inflate(R.layout.popup_view, null), 300, 200, false)
-//                        .showAtLocation(((View) chipsView1.getParent()), Gravity.NO_GRAVITY, 100, 100);
-
                 List<Chips> chips;
                 String title;
                 try {
@@ -84,8 +81,8 @@ public class MainActivity extends AppCompatActivity {
                     title = "There are invalid chips";
                     chips = e.getChips();
                 }
-                ListDialog listDialog = ListDialog.newInstance(chips, title);
-                listDialog.show(getSupportFragmentManager(), ListDialog.TAG);
+                ListDialogFragment listDialog = ListDialogFragment.newInstance(chips, title);
+                listDialog.show(getSupportFragmentManager(), ListDialogFragment.TAG);
             }
         });
 
@@ -94,12 +91,13 @@ public class MainActivity extends AppCompatActivity {
             @Nullable
             @Override
             protected View getPopupView(ViewGroup parent, int position, Actor item) {
-                return getLayoutInflater().inflate(R.layout.popup_view, parent, false);
+//                return getLayoutInflater().inflate(R.layout.popup_view, parent, false);
+                return null;
             }
 
             @Override
             protected boolean hasPopup() {
-                return true;
+                return false;
             }
 
             @Override
@@ -118,8 +116,59 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initThirdView(ChipsIdHolder suggestionsIdHolder, ChipsIdHolder chipsIdHolder, ChipsIdHolder invalidChipsIdHolder, List<Actor> list2) {
-        ChipsAdapter<Actor> adapter3 = new ActorAdapter(this, suggestionsIdHolder,
+        adapter3 = new ActorAdapter(this, suggestionsIdHolder,
                 chipsIdHolder, invalidChipsIdHolder, list2, chipsView3);
+        adapter3.setChipsValidator(new ChipsValidator<Actor>() {
+            @Override
+            public boolean isValid(Actor chips) {
+                return !chips.getSurname().isEmpty();
+            }
+        });
         chipsView3.setAdapter(adapter3);
+    }
+
+
+    public void onDataChanged(int position, Actor actor) {
+        adapter3.updateItem(position, actor);
+    }
+
+    public class ActorAdapter extends ChipsAdapter<Actor> {
+
+        public ActorAdapter(Context context,
+                            ChipsIdHolder suggestionIdHolder, ChipsIdHolder chipsIdHolder,
+                            ChipsIdHolder invalidChipsIdHolder,
+                            @Nullable List<Actor> suggestions, ChipsView chipsView) {
+            super(context, suggestionIdHolder, chipsIdHolder, invalidChipsIdHolder, suggestions, chipsView);
+        }
+
+        @Nullable
+        @Override
+        protected View getPopupView(ViewGroup parent, final int position, final Actor item) {
+
+            View view = getLayoutInflater().inflate(R.layout.popup_view, parent, false);
+            ((TextView) view.findViewById(R.id.popup_text1)).setText(item.getName());
+            ((TextView) view.findViewById(R.id.popup_text2)).setText(item.getSurname());
+            if (item.getDrawableId() > 0) {
+                ((ImageView) view.findViewById(R.id.popup_image)).setImageResource(item.getDrawableId());
+            }
+            view.findViewById(R.id.btn_edit).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    EditDialogFragment dialogFragment = EditDialogFragment.newInstance(position, item);
+                    dialogFragment.show(getSupportFragmentManager(), EditDialogFragment.TAG);
+                }
+            });
+            return view;
+        }
+
+        @Override
+        protected boolean hasPopup() {
+            return true;
+        }
+
+        @Override
+        public Chips instantiateNewChips(String text) {
+            return new Actor(text, "", 0);
+        }
     }
 }
