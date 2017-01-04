@@ -345,7 +345,8 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
             state = bundle.getParcelable(SUPER_STATE);
         }
         super.onRestoreInstanceState(state);
-        setClickableSpanListeners();
+//        setClickableSpanListeners();
+        setChips(getText().toString());
     }
 
     private void setClickableSpanListeners() {
@@ -371,6 +372,7 @@ public class ChipsView extends AppCompatMultiAutoCompleteTextView implements OnI
             }
         }
     }
+
 
     public Chips getChipsAt(int position) {
         Chips chips = this.chips.get(position);
